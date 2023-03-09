@@ -12,7 +12,7 @@ Once the package is installed, make sure to define environment variables PARADIG
 
 ```
 export PARADIGM_API_KEY="<your api key>"
-export HOST="<your host adress>"
+export HOST="http://<your host ip>"
 ```
 
 ## Quick Start
@@ -23,10 +23,8 @@ import os
 
 host = os.environ.get("HOST", None)
 assert host is not None, "{HOST} env var is not properly set. Run `export HOST=<value>` in your shell or add it to your `.bashrc`"
-api_key = os.environ.get("PARADIGM_API_KEY", None)
-assert api_key is not None, "{PARADIGM_API_KEY} env var is not properly set. Run `export PARADIGM_API_KEY=<value>` in your shell or add it to your `.bashrc`"
 
-model = RemoteModel(host, model_name="llm-mini", timeout_s=120)
+model = RemoteModel(host, model_name="llm-mini")
 
-print(model.create("Hello, I am happy because", echo=True).completions[0].output_text)
+print(model.create("Hello, I am").completions[0].output_text)
 ```
