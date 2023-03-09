@@ -26,16 +26,7 @@ assert host is not None, "{HOST} env var is not properly set. Run `export HOST=<
 api_key = os.environ.get("PARADIGM_API_KEY", None)
 assert api_key is not None, "{PARADIGM_API_KEY} env var is not properly set. Run `export PARADIGM_API_KEY=<value>` in your shell or add it to your `.bashrc`"
 
-model = RemoteModel(
-    f"{host}", 
-    headers={
-        "Content-Type": "application/json", 
-        "Accept": "application/json",
-        "X-API-KEY": api_key,
-        "X-Model": "llm-mini",
-    },
-    timeout_s=120
-)
+model = RemoteModel(f"{host}", model_name="llm-mini", timeout_s=120)
 
 print(model.create("Hello, I am happy because", echo=True).completions[0].output_text)
 ```
