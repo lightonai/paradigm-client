@@ -44,7 +44,7 @@ class RemoteModel:
             timeout_s,
             raise_for_status=raise_for_status,
         )
-        self.wait_for_model_server()
+        self._wait_for_model_server()
 
     def _post(
         self, data: Any, endpoint: Endpoint, num_tasks: int, show_progress: bool = True
@@ -195,7 +195,7 @@ class RemoteModel:
     ) -> list[TokenizeResponse] | ErrorResponse:
         return self._post_objects(tokenize_obj, Endpoint.tokenize, show_progress=show_progress)
 
-    def wait_for_model_server(self):
+    def _wait_for_model_server(self):
         print_logs(f"Waiting for the ModelServer to be ready", end="", verbose=self.verbose)
         while not self.comm.is_available():
             print_logs(f".", end="", verbose=self.verbose)
