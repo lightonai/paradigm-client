@@ -58,6 +58,9 @@ class RemoteModel:
                     return TokenizeResponse(**response)
 
         if "responses" not in response:
+            # ugly hack while auth not in sync
+            if "detail" in response:
+                return ErrorResponse(request_id="", error_msg=f"{response.get('detail')}={self.comm.headers.get('X-API-KEY')}", status_code=403)
             return ErrorResponse(**response)
 
         outputs = [convert_output(r) for r in response["responses"]]
