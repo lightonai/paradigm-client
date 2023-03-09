@@ -24,7 +24,7 @@ import os
 host = os.environ.get("HOST", None)
 assert host is not None, "{HOST} env var is not properly set. Run `export HOST=<value>` in your shell or add it to your `.bashrc`"
 api_key = os.environ.get("PARADIGM_API_KEY", None)
-assert host is not None, "{PARADIGM_API_KEY} env var is not properly set. Run `export PARADIGM_API_KEY=<value>` in your shell or add it to your `.bashrc`"
+assert api_key is not None, "{PARADIGM_API_KEY} env var is not properly set. Run `export PARADIGM_API_KEY=<value>` in your shell or add it to your `.bashrc`"
 
 model = RemoteModel(
     f"{host}", 
