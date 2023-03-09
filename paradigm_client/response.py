@@ -8,6 +8,7 @@ class FinishReason(str, Enum):
     length = "length"
     generated_stop = "generated_stop"
     stop_regex = "stop_regex"
+    stop_word = "stop_word" # TODO: remove when server up-to-date
 
 
 class LogProbs(BaseModel):
