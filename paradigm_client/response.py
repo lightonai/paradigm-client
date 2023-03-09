@@ -19,7 +19,7 @@ class LogProbs(BaseModel):
 class CreateCandidatesOutput(BaseModel):
     output_text: str
     log_probs: LogProbs | None
-    finish_reason: FinishReason | list[FinishReason]
+    finish_reason: FinishReason
 
 
 class CreateResponse(BaseModel):
