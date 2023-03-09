@@ -6,7 +6,8 @@ from pydantic import BaseModel
 
 class FinishReason(str, Enum):
     length = "length"
-    stop_word = "stop_word"
+    generated_stop = "generated_stop"
+    stop_regex = "stop_regex"
 
 
 class LogProbs(BaseModel):
