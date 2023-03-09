@@ -84,7 +84,7 @@ class CreateParameters(BaseModel):
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
-        if self.stop_regex is not None:
+        if self.stop_regex is not None and isinstance(self.stop_regex, Pattern):
             d |= {"stop_regex": self.stop_regex.pattern}  # hack to serialize stop_regex (obj -> dict -> json)
         return d
 
