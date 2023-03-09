@@ -1,3 +1,4 @@
+import os
 import time
 from typing import Any, Generator
 
@@ -29,12 +30,17 @@ class RemoteModel:
         verbose: bool = False,
         comm=None,
         raise_for_status: bool = False,
+        model_name: str | None = None,
     ) -> None:
         self.verbose = verbose
         assert base_address is not None or comm is not None, "You must provide base_address or comm"
+        base_headers = {"Content-Type": "application/json", "Accept": "application/json"} | {
+            "X-API-KEY": os.environ.get("PARADIGM_API_KEY", str(None)),
+            "X-Model": str(model_name),
+        }
         self.comm = comm or Communicator(
             base_address,
-            headers or {"Content-Type": "application/json", "Accept": "application/json"},
+            headers or base_headers,
             timeout_s,
             raise_for_status=raise_for_status,
         )
