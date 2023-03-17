@@ -57,7 +57,7 @@ class CreateParameters(BaseModel):
     @validator("top_p")
     def check_p(cls, top_p):
         if not 0.0 < top_p <= 1.0:
-            raise ValueError(f"p nucleus parameter should satisfy 0.0 < p < 1.0. Found {p}")
+            raise ValueError(f"top_p nucleus parameter should satisfy 0.0 < top_p < 1.0. Found {top_p}")
         return min(top_p, 0.999)  # we do not want p = 1.0
 
     @validator("n_completions")
