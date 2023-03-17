@@ -50,8 +50,8 @@ class CreateParameters(BaseModel):
 
     @validator("temperature")
     def check_temperature(cls, temperature):
-        if not 0.0 < temperature <= 10.0:
-            raise ValueError(f"temperature should satisfy 0.0 < temperature <= 10.0. Found {temperature}")
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError(f"temperature should satisfy 0.0 <= temperature <= 2.0. Found {temperature}")
         return temperature
 
     @validator("top_p")
