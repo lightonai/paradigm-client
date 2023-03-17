@@ -38,7 +38,7 @@ setup(
     install_requires=[
         'aiohttp==3.8.4',
         'pydantic==1.10.2',
-        'requests==2.28.1',
+        'requests==2.28.2',
         'tqdm==4.64.1'
     ],
     packages=find_packages(exclude=["examples", "tests"]),
