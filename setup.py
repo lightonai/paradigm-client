@@ -36,7 +36,7 @@ setup(
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
     install_requires=[
-        'aiohttp==3.8.3',
+        'aiohttp==3.8.4',
         'pydantic==1.10.2',
         'requests==2.28.1',
         'tqdm==4.64.1'
