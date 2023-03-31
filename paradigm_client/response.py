@@ -1,5 +1,6 @@
 from enum import Enum
 import pickle
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -52,7 +53,7 @@ class TokenizeResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
-    request_id: str
+    request_id: Optional[str] = None
     error_msg: str
     status_code: int
 
