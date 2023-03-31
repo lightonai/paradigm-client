@@ -65,7 +65,9 @@ class RemoteModel:
 
         if "responses" not in response:
             if "detail" in response:
-                return ErrorResponse(request_id="", error_msg=response.get("detail"), status_code=response.get("status_code"))
+                return ErrorResponse(
+                    request_id="", error_msg=response.get("detail"), status_code=response.get("status_code")
+                )
             return ErrorResponse(**response)
 
         outputs = [convert_output(r) for r in response["responses"]]
@@ -206,4 +208,6 @@ class RemoteModel:
         if self.comm.is_available():
             print_logs(" ModelServer is ready!", verbose=self.verbose)
         else:
-            print("We're sorry, but the ModelServer is currently unavailable. Please try again later. If you continue to experience issues, please contact our support team for further assistance. Thank you.")
+            print(
+                "We're sorry, but the ModelServer is currently unavailable. Please try again later. If you continue to experience issues, please contact our support team for further assistance. Thank you."
+            )
