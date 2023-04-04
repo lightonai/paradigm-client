@@ -124,7 +124,8 @@ class Communicator(AbstractCommunicator):
 
     def is_available(self) -> bool:
         try:
-            return requests.get(f"{self.base_address}/availability").status_code == 200
+            r = requests.get(f"{self.base_address}/availability", headers={"X-API-KEY": self.headers.get("X-API-KEY", None)})
+            return r.status_code == 200
         except Exception as e:
             print(f"Detected exception {e}")
             return False
