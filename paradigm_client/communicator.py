@@ -67,6 +67,7 @@ class Communicator(AbstractCommunicator):
         ) as session:
             async with session.post(f"/llm/{endpoint.value}", json={"data": data}) as resp:
                 response = await resp.json()
+                response["status_code"] = resp.status
         return response
 
     async def _get_progress_task(self, session_id: str, num_tasks: int, endpoint: Endpoint):
@@ -124,7 +125,8 @@ class Communicator(AbstractCommunicator):
     def is_available(self) -> bool:
         try:
             return requests.get(f"{self.base_address}/availability").status_code == 200
-        except Exception:
+        except Exception as e:
+            print(f"Detected exception {e}")
             return False
 
     def get_session_id(self) -> str:

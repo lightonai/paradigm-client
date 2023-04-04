@@ -1,5 +1,6 @@
 from enum import Enum
 import pickle
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -8,7 +9,7 @@ class FinishReason(str, Enum):
     length = "length"
     generated_stop = "generated_stop"
     stop_regex = "stop_regex"
-    stop_word = "stop_word" # TODO: remove when server up-to-date
+    stop_word = "stop_word"  # TODO: remove when server up-to-date
 
 
 class LogProbs(BaseModel):
@@ -52,7 +53,7 @@ class TokenizeResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
-    request_id: str
+    request_id: Optional[str] = None
     error_msg: str
     status_code: int
 

@@ -64,9 +64,10 @@ class RemoteModel:
                     return TokenizeResponse(**response)
 
         if "responses" not in response:
-            # ugly hack while auth not in sync
             if "detail" in response:
-                return ErrorResponse(request_id="", error_msg=f"{response.get('detail')}={self.comm.headers.get('X-API-KEY')}", status_code=403)
+                return ErrorResponse(
+                    request_id="", error_msg=response.get("detail"), status_code=response.get("status_code")
+                )
             return ErrorResponse(**response)
 
         outputs = [convert_output(r) for r in response["responses"]]
@@ -197,7 +198,16 @@ class RemoteModel:
 
     def _wait_for_model_server(self):
         print_logs(f"Waiting for the ModelServer to be ready", end="", verbose=self.verbose)
+        counter = 0
         while not self.comm.is_available():
             print_logs(f".", end="", verbose=self.verbose)
-            time.sleep(2.0)
-        print_logs(" ModelServer is ready!", verbose=self.verbose)
+            time.sleep(10.0)
+            counter += 1
+            if counter > 60:
+                break
+        if self.comm.is_available():
+            print_logs(" ModelServer is ready!", verbose=self.verbose)
+        else:
+            print(
+                "We're sorry, but the ModelServer is currently unavailable. Please try again later. If you continue to experience issues, please contact our support team for further assistance. Thank you."
+            )
