@@ -12,7 +12,6 @@ Once the package is installed, make sure to define environment variables PARADIG
 
 ```
 export PARADIGM_API_KEY="<your api key>"
-export HOST="http://<your host ip>"
 ```
 
 ## Quick Start
@@ -21,8 +20,7 @@ export HOST="http://<your host ip>"
 from paradigm_client.remote_model import RemoteModel
 import os
 
-host = os.environ.get("HOST", None)
-assert host is not None, "{HOST} env var is not properly set. Run `export HOST=<value>` in your shell or add it to your `.bashrc`"
+host=<HOST_IP>
 
 model = RemoteModel(host, model_name="llm-mini")
 
