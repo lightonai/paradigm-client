@@ -89,6 +89,16 @@ class Communicator(AbstractCommunicator):
                             pbar.update(delta)
                         await asyncio.sleep(2.0)
 
+    def stream_response(self, data):
+        stream = requests.post(  # TODO: implement stream with aiohttp
+            f"{self.base_address}/llm/{Endpoint.stream_create.value}",
+            json={"data": data},
+            headers=self.headers,
+            timeout=self.timeout_s.total,
+            stream=True,
+        )
+        yield from stream.iter_content(chunk_size=1024, decode_unicode=True)
+
     def __call__(
         self, data: Any, endpoint: Endpoint, stream: bool, **kwargs
     ) -> list[SelectResponse] | list[AnalyseResponse] | list[CreateResponse] | list[
@@ -111,13 +121,7 @@ class Communicator(AbstractCommunicator):
             tasks.append(self._post(data, endpoint, session_id))
             return _safe_run_tasks(tasks)[-1]
         else:
-            return requests.post(  # TODO: implement stream with aiohttp
-                f"{self.base_address}/llm/{Endpoint.stream_create.value}",
-                json={"data": data},
-                headers=self.headers,
-                timeout=self.timeout_s.total,
-                stream=True,
-            )
+            return self.stream_response(data)
 
     def get_model_name(self) -> str:
         return requests.get(f"{self.base_address}/model").text
@@ -176,6 +180,14 @@ class SagemakerCommunicator(AbstractCommunicator):
                     pbar.update(delta)
                 await asyncio.sleep(2.0)
 
+    def stream_response(self, data):
+        session_id = _safe_run_tasks([self._post(data, Endpoint.stream_create)])[0].pop('request_id')
+        done = False
+        while not done:
+            stream_tokens = _safe_run_tasks([self._post({}, Endpoint.stream_tokens, session_id=session_id)])[0]
+            yield ''.join(stream_tokens.get('tokens'))
+            done = stream_tokens.get('done')
+
     def __call__(
         self, data: Any, endpoint: Endpoint, stream: bool, **kwargs
     ) -> list[SelectResponse] | list[AnalyseResponse] | list[CreateResponse] | list[
@@ -197,7 +209,7 @@ class SagemakerCommunicator(AbstractCommunicator):
             tasks.append(self._post(data, endpoint, session_id))
             return _safe_run_tasks(tasks)[-1]
         else:
-            raise NotImplementedError
+            return self.stream_response(data)
 
     def get_model_name(self) -> str:
         return self._invoke_endpoint("/model")
