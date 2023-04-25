@@ -12,6 +12,11 @@ class FinishReason(str, Enum):
     stop_word = "stop_word"  # TODO: remove when server up-to-date
 
 
+class TokenMetadata(BaseModel):
+    input_tokens: int
+    output_tokens: Optional[int] = None
+
+
 class LogProbs(BaseModel):
     log_prob: float
     normalized_log_prob: float
@@ -22,6 +27,7 @@ class CreateCandidatesOutput(BaseModel):
     output_text: str
     log_probs: LogProbs | None
     finish_reason: FinishReason
+    token_metadata: TokenMetadata
 
 
 class CreateResponse(BaseModel):
@@ -32,6 +38,7 @@ class CreateResponse(BaseModel):
 class AnalyseResponse(BaseModel):
     text: str
     log_probs: LogProbs
+    token_metadata: TokenMetadata
 
 
 class Rankings(BaseModel):
@@ -44,12 +51,14 @@ class SelectResponse(BaseModel):
     reference: str
     rankings: list[Rankings] | None
     best: str
+    token_metadata: TokenMetadata
 
 
 class TokenizeResponse(BaseModel):
     text: str
     n_tokens: int
     tokens: list[dict[str, int]]
+    token_metadata: TokenMetadata
 
 
 class ErrorResponse(BaseModel):
