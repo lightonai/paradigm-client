@@ -11,6 +11,7 @@ MAX_SEQ_LEN = 2048
 class Endpoint(str, Enum):
     create = "create"
     stream_create = "stream_create"
+    stream_tokens = "stream_tokens"
     analyse = "analyse"
     select = "select"
     tokenize = "tokenize"

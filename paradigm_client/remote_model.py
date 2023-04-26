@@ -75,9 +75,7 @@ class RemoteModel:
         return outputs
 
     def _post_stream(self, data: Any) -> Generator[str, None, None]:
-        stream = self.comm(data, Endpoint.stream_create, stream=True)
-        for text in stream.iter_content(chunk_size=1024, decode_unicode=True):
-            yield text
+        yield from self.comm(data, Endpoint.stream_create, stream=True)
 
     def _post_objects(
         self, objects: BaseModel | list[BaseModel], endpoint: Endpoint, show_progress: bool = False
