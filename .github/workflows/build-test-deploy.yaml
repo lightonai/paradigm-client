@@ -40,8 +40,8 @@ jobs:
       - name: Test package
         run: |
           pip install dist/*.whl
-          pip install pytest-variables
-          pytest --variables HOST=${{ env.HOST }},PARADIGM_API_KEY=${{ env.PARADIGM_API_KEY }} tests/hello.py
+          pip install pytest
+          pytest tests/hello.py
 
       - name: Publish to PyPI
         # add conditions to only deploy when pushing code on the main branch with a tag that started with 'v'
