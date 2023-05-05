@@ -40,7 +40,6 @@ jobs:
       - name: Test package
         run: |
           pip install dist/*.whl
-        #pip install pytest
           python tests/hello.py
 
       - name: Publish to PyPI
