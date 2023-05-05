@@ -40,7 +40,7 @@ jobs:
       - name: Test package
         run: |
           pip install dist/*.whl
-          pip install pytest
+          pip install pytest-variables
           pytest --variables HOST=${{ env.HOST }},PARADIGM_API_KEY=${{ env.PARADIGM_API_KEY }} tests/hello.py
 
       - name: Publish to PyPI
