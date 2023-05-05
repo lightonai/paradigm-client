@@ -11,14 +11,13 @@ env:
   TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
   #TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
   PYPI_API_TOKEN: ${{ secrets.PYPI_MDP }}
+  # needed environmental variables for running tests
+  HOST: ${{ secrets.HOST }}
+  PARADIGM_API_KEY: ${{ secrets.PARADIGM_API_KEY }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # needed environmental variables for running tests
-    env:
-      HOST: ${{ secrets.HOST }}
-      PARADIGM_API_KEY: ${{ secrets.PARADIGM_API_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -42,7 +41,7 @@ jobs:
         run: |
           pip install dist/*.whl
           pip install pytest
-          pytest --var1 ${HOST} --var2 ${PARADIGM_API_KEY} tests/
+          pytest --variables HOST=${{ env.HOST }},PARADIGM_API_KEY=${{ env.PARADIGM_API_KEY }} tests/hello.py
 
       - name: Publish to PyPI
         # add conditions to only deploy when pushing code on the main branch with a tag that started with 'v'
