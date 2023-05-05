@@ -1,0 +1,49 @@
+name: Publish Package to PyPI
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+  #TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
+  PYPI_API_TOKEN: ${{ secrets.PYPI_MDP }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # needed environmental variables for running tests
+    env:
+      HOST: ${{ secrets.HOST }}
+      PARADIGM_API_KEY: ${{ secrets.PARADIGM_API_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ../../paradigm_client/requirements.txt
+
+      - name: Build package
+        run: python ../../setup.py sdist bdist_wheel
+
+      - name: Test package
+        run:
+          pip install dist/*.whl
+          pytest --var1 ${HOST} --var2 ${PARADIGM_API_KEY} tests/
+
+      - name: Publish to PyPI
+        # add conditions to only deploy when pushing code on the main branch with a tag that started with 'v'
+        if: startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
+        uses: pypa/gh-action-pypi-publish@27b8bea7ecf4b4d4c24f4cc8edae8222ad39fc69
+        with:
+          user: ${{ env.TWINE_USERNAME }}
+          password: ${{ env.PYPI_API_TOKEN }}
+          packages: dist/*
