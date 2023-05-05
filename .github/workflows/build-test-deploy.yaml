@@ -44,7 +44,7 @@ jobs:
       - name: Publish to PyPI
         # add conditions to only deploy when pushing code on the main branch with a tag that started with 'v'
         if: startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/main'
-        uses: pypa/gh-action-pypi-publish@27b8bea7ecf4b4d4c24f4cc8edae8222ad39fc69
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: ${{ env.TWINE_USERNAME }}
           password: ${{ env.PYPI_API_TOKEN }}
