@@ -40,8 +40,8 @@ jobs:
       - name: Test package
         run: |
           pip install dist/*.whl
-          pip install pytest
-          pytest tests/hello.py
+        #pip install pytest
+          python tests/hello.py
 
       - name: Publish to PyPI
         # add conditions to only deploy when pushing code on the main branch with a tag that started with 'v'
