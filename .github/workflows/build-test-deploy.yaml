@@ -35,12 +35,13 @@ jobs:
 
       - name: Build package
         run: |
-          pip install wheel
+          pip install setuptools wheel
           python setup.py sdist bdist_wheel
 
       - name: Test package
         run: |
           pip install dist/*.whl
+          pip install pytest
           pytest --var1 ${HOST} --var2 ${PARADIGM_API_KEY} tests/
 
       - name: Publish to PyPI
