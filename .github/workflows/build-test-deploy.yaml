@@ -54,6 +54,7 @@ jobs:
           password: ${{ env.TWINE_PWD_TEST }}
           repository-url: https://test.pypi.org/legacy/
           packages-dir: ./dist/
+          skip_existing: true
 
       - name: Publish to PyPI
         # add conditions to only deploy when pushing code on the main branch with a tag that started with 'v'
