@@ -50,18 +50,18 @@ jobs:
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          username: ${{ env.TWINE_USERNAME_TEST }}
+          user: ${{ env.TWINE_USERNAME_TEST }}
           password: ${{ env.TWINE_PWD_TEST }}
-          repository_url: https://test.pypi.org/legacy/
-          package_dir: ./dist/
-          package_glob: '*.whl'
+          repository-url: https://test.pypi.org/legacy/
+          packages_dir: ./dist/
+          packages_glob: '*.whl'
 
       - name: Test Deploy to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: ${{ env.TWINE_USERNAME_TEST }}
           password: ${{ env.TWINE_PWD_TEST }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
           skip_existing: true
 
       - name: Publish to PyPI
@@ -71,5 +71,5 @@ jobs:
         with:
           user: ${{ env.TWINE_USERNAME }}
           password: ${{ env.TWINE_PWD }}
-          #repository_url: https://upload.pypi.org/legacy/
+          #repository-url: https://upload.pypi.org/legacy/
           packages: dist/*
