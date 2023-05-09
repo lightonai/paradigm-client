@@ -47,21 +47,13 @@ jobs:
           pip install dist/*.whl
           python tests/example.py
 
-      - name: Upload to TestPyPI
+      - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: ${{ env.TWINE_USERNAME_TEST }}
           password: ${{ env.TWINE_PWD_TEST }}
           repository-url: https://test.pypi.org/legacy/
           packages-dir: ./dist/
-
-      - name: Test Deploy to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: ${{ env.TWINE_USERNAME_TEST }}
-          password: ${{ env.TWINE_PWD_TEST }}
-          repository-url: https://test.pypi.org/legacy/
-          skip_existing: true
 
       - name: Publish to PyPI
         # add conditions to only deploy when pushing code on the main branch with a tag that started with 'v'
@@ -71,4 +63,4 @@ jobs:
           user: ${{ env.TWINE_USERNAME }}
           password: ${{ env.TWINE_PWD }}
           #repository-url: https://upload.pypi.org/legacy/
-          packages: dist/*
+          packages-dir: ./dist/
