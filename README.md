@@ -24,5 +24,5 @@ host=<HOST_IP>
 
 model = RemoteModel(host, model_name="llm-mini")
 
-print(model.create("He[paradigm_client.egg-info](paradigm_client.egg-info)llo, I am").completions[0].output_text)
+print(model.create("Hello, I am").completions[0].output_text)
 ```
