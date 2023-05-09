@@ -48,7 +48,7 @@ jobs:
           python tests/example.py
 
       - name: Upload to TestPyPI
-        uses: pypa/gh-action-pypi-publish@27b8bea7ecf4b4d4c24f4cc8edae8222ad39fc69
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           username: ${{ env.TWINE_USERNAME_TEST }}
           password: ${{ env.TWINE_PWD_TEST }}
