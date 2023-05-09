@@ -45,7 +45,7 @@ jobs:
       - name: Test package
         run: |
           pip install dist/*.whl
-          python tests/hello.py
+          python tests/example.py
 
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@27b8bea7ecf4b4d4c24f4cc8edae8222ad39fc69
