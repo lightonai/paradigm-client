@@ -23,7 +23,7 @@ export HOST="<your host IP>"
 
 ## Quick Start
 
-Using `paradigm-client` is pretty simple, here are a code example to show you how you can use it.
+Using paradigm-client is pretty simple, here are a code example to show you how you can use it.
 
 ```
 from paradigm_client.remote_model import RemoteModel
