@@ -26,7 +26,6 @@ classifiers = [
 
 setup(
     name=name,
-    version='1.0.0', # specify a version manually to use TestPypi
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -34,7 +33,7 @@ setup(
     author_email=author_email,
     url="https://github.com/lightonai/paradigm-client",
     use_scm_version=True,
-    setup_requires=["setuptools_scm"],
+    #setup_requires=["setuptools_scm"],
     install_requires=["aiohttp==3.8.4", "pydantic==1.10.2", "requests==2.28.2", "tqdm==4.64.1"],
     packages=find_packages(exclude=["examples", "tests"]),
     keywords=["NLP", "API", "AI", "LLM"],
