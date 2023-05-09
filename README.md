@@ -1,10 +1,15 @@
 # paradigm-client
 
-Python client for LightOn Paradigm LLMs
+Python client for LightOn Paradigm Large language Model.
 
-## Local installation
+## Installation
 
-The following command will pull and install the latest commit from this repository, along with its Python dependencies:
+You can install this package from PyPi with:
+```
+pip install paradigm-client
+```
+
+Or from source:
 ```
 pip install -U git+https://github.com/lightonai/paradigm-client.git
 ```
@@ -16,17 +21,22 @@ export PARADIGM_API_KEY="<your api key>"
 export HOST="<your host IP>"
 ```
 
-## Remote installation
-
-You can just run `pip install paradigm-client` to get the latest version of the package from the https://pypi.org/ repository.
-
 ## Quick Start
 
-See `tests/example.py` code example to know how you can use the library.
+Using `paradigm-client` is pretty simple, here are a code example to show you how you can use it.
 
-## Deployment
+```
+from paradigm_client.remote_model import RemoteModel
+import os
 
-To deploy a new version of the `paradigm-client` package, you should push your local commits on the `main` branch with a new tag that started with `v` (e.g. `v1.0`),
-then the GitHub workflow allows to automatically install dependencies, run tests, build the package and publish it to PyPI (see `.github/workflows/build-test-deploy.yaml` file for more details).
+host = os.environ.get('HOST')
 
+model = RemoteModel(host, model_name="llm-mini")
 
+print(model.create("Hello, I am").completions[0].output_text)
+```
+
+## Access to LightOn Paradigm
+
+Try our Paradigm LLM at https://www.lighton.ai/fr/paradigm.
+See some Paradigm user cases at https://www.lighton.ai/fr/blog/ai-use-case-5.
