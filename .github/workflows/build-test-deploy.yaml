@@ -53,8 +53,7 @@ jobs:
           user: ${{ env.TWINE_USERNAME_TEST }}
           password: ${{ env.TWINE_PWD_TEST }}
           repository-url: https://test.pypi.org/legacy/
-          packages_dir: ./dist/
-          packages_glob: '*.whl'
+          packages-dir: ./dist/
 
       - name: Test Deploy to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1

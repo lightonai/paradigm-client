@@ -26,6 +26,7 @@ classifiers = [
 
 setup(
     name=name,
+    version='1.0.0', # specify a version manually to use TestPypi
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
