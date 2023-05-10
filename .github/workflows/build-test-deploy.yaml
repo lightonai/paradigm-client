@@ -46,7 +46,7 @@ jobs:
           python tests/example.py
 
       - name: Publish to TestPyPI
-        if: startsWith(github.ref, 'refs/tags/v') && (github.ref == 'refs/heads/dev-safa')
+        if: github.ref == 'refs/heads/dev-safa'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: ${{ env.TWINE_USERNAME_TEST }}
