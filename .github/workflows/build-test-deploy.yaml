@@ -10,8 +10,8 @@ on:
 env:
   TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
   TWINE_PWD: ${{ secrets.PYPI_MDP }}
-#  TWINE_USERNAME_TEST: ${{ secrets.TESTPYPI_USERNAME }}
-#  TWINE_PWD_TEST: ${{ secrets.TESTPYPI_MDP }}
+  TWINE_USERNAME_TEST: ${{ secrets.TESTPYPI_USERNAME }}
+  TWINE_PWD_TEST: ${{ secrets.TESTPYPI_MDP }}
   # needed environmental variables for running tests
   HOST: ${{ secrets.HOST }}
   PARADIGM_API_KEY: ${{ secrets.PARADIGM_API_KEY }}
@@ -45,14 +45,15 @@ jobs:
           pip install dist/*.whl
           python tests/example.py
 
-#      - name: Publish to TestPyPI
-#        uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          user: ${{ env.TWINE_USERNAME_TEST }}
-#          password: ${{ env.TWINE_PWD_TEST }}
-#          repository-url: https://test.pypi.org/legacy/
-#          packages-dir: ./dist/
-#          skip_existing: true
+      - name: Publish to TestPyPI
+        if: startsWith(github.ref, 'refs/tags/v') && github.ref == 'refs/heads/dev-safa'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: ${{ env.TWINE_USERNAME_TEST }}
+          password: ${{ env.TWINE_PWD_TEST }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: ./dist/
+          skip_existing: true
 
       - name: Publish to PyPI
         # add conditions to only deploy when pushing code on the main branch with a tag that started with 'v'
