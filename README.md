@@ -18,7 +18,6 @@ Once the package is installed, make sure to define environment variables PARADIG
 
 ```
 export PARADIGM_API_KEY="<your api key>"
-export HOST="<your host IP>"
 ```
 
 ## Quick Start
