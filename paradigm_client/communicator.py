@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import json
-from typing import Any, Generator
+from typing import Any, Generator, Optional, Union
 
 import aiohttp
 import requests
@@ -49,7 +49,7 @@ class AbstractCommunicator(ABC):
 
 class Communicator(AbstractCommunicator):
     def __init__(
-        self, base_address: str, headers: dict[str, str], timeout_s: int | float, raise_for_status: bool = False
+        self, base_address: str, headers: dict[str, str], timeout_s: Union[int, float], raise_for_status: bool = False
     ) -> None:
         self.base_address = base_address
         self.headers = headers
@@ -57,7 +57,7 @@ class Communicator(AbstractCommunicator):
         self.model_name: str | None = None
         self.raise_for_status = raise_for_status
 
-    async def _post(self, data: Any, endpoint: Endpoint, session_id: str | None = None):
+    async def _post(self, data: Any, endpoint: Endpoint, session_id: Optional[str] = None):
         request_id = {"request_id": session_id} if session_id else {}
         async with aiohttp.ClientSession(
             base_url=self.base_address,
@@ -101,9 +101,7 @@ class Communicator(AbstractCommunicator):
 
     def __call__(
         self, data: Any, endpoint: Endpoint, stream: bool, **kwargs
-    ) -> list[SelectResponse] | list[AnalyseResponse] | list[CreateResponse] | list[
-        TokenizeResponse
-    ] | ErrorResponse | Generator[str, None, None]:
+    ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[TokenizeResponse], ErrorResponse, Generator[str, None, None]]:
 
         if self.model_name is None:
             self.model_name = self.get_model_name()
@@ -147,7 +145,7 @@ class SagemakerCommunicator(AbstractCommunicator):
 
         self.model_name: str | None = None
 
-    def _invoke_endpoint(self, endpoint: str, session_id: str | None = None, data: dict | None = None):
+    def _invoke_endpoint(self, endpoint: str, session_id: Optional[str] = None, data: Optional[dict] = None):
         request_id = {"request_id": session_id} if session_id else {}
         data = {"data": data} if data else {}
 
@@ -159,7 +157,7 @@ class SagemakerCommunicator(AbstractCommunicator):
 
         return response["Body"].read().decode("utf8")
 
-    async def _post(self, data: Any, endpoint: Endpoint, session_id: str | None = None):
+    async def _post(self, data: Any, endpoint: Endpoint, session_id: Optional[str] = None):
         return json.loads(self._invoke_endpoint(f"llm/{endpoint.value}", session_id, data))
 
     async def _get_progress_task(self, session_id: str, num_tasks: int, endpoint: Endpoint):
@@ -190,9 +188,7 @@ class SagemakerCommunicator(AbstractCommunicator):
 
     def __call__(
         self, data: Any, endpoint: Endpoint, stream: bool, **kwargs
-    ) -> list[SelectResponse] | list[AnalyseResponse] | list[CreateResponse] | list[
-        TokenizeResponse
-    ] | ErrorResponse | Generator[str, None, None]:
+    ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[TokenizeResponse], ErrorResponse, Generator[str, None, None]]:
         if self.model_name is None:
             self.model_name = self.get_model_name()
 

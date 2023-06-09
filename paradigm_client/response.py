@@ -15,12 +15,12 @@ class FinishReason(str, Enum):
 class LogProbs(BaseModel):
     log_prob: float
     normalized_log_prob: float
-    token_log_probs: list[dict[str, float]] | None
+    token_log_probs: Optional[list[dict[str, float]]]
 
 
 class CreateCandidatesOutput(BaseModel):
     output_text: str
-    log_probs: LogProbs | None
+    log_probs: Optional[LogProbs]
     finish_reason: FinishReason
 
 
@@ -37,12 +37,12 @@ class AnalyseResponse(BaseModel):
 class Rankings(BaseModel):
     text: str
     log_probs: LogProbs
-    is_greedy_generation: list[bool] | None = None
+    is_greedy_generation: Optional[list[bool]] = None
 
 
 class SelectResponse(BaseModel):
     reference: str
-    rankings: list[Rankings] | None
+    rankings: Optional[list[Rankings]]
     best: str
 
 

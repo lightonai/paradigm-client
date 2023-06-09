@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Any, Generator
+from typing import Any, Generator, Optional, Union
 
 from pydantic import BaseModel, validate_arguments
 
@@ -16,7 +16,7 @@ from .response import CreateResponse, AnalyseResponse, SelectResponse, TokenizeR
 from .communicator import Communicator
 
 
-def print_logs(msg, end: str | None = None, verbose: bool = False):
+def print_logs(msg, end: Optional[str] = None, verbose: bool = False):
     if verbose:
         print(msg, end=end, flush=True)
 
@@ -24,13 +24,13 @@ def print_logs(msg, end: str | None = None, verbose: bool = False):
 class RemoteModel:
     def __init__(
         self,
-        base_address: str | None = None,
-        headers: dict[str, str] | None = None,
+        base_address: Optional[str] = None,
+        headers: Optional[dict[str, str]] = None,
         timeout_s: int = 180,
         verbose: bool = False,
         comm=None,
         raise_for_status: bool = False,
-        model_name: str | None = None,
+        model_name: Optional[str] = None,
     ) -> None:
         self.verbose = verbose
         assert base_address is not None or comm is not None, "You must provide base_address or comm"
@@ -48,20 +48,19 @@ class RemoteModel:
 
     def _post(
         self, data: Any, endpoint: Endpoint, num_tasks: int, show_progress: bool = True
-    ) -> list[SelectResponse] | list[AnalyseResponse] | list[CreateResponse] | list[TokenizeResponse] | ErrorResponse:
+    ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[TokenizeResponse], ErrorResponse]:
 
         response = self.comm(data, endpoint, stream=False, **{"num_tasks": num_tasks, "show_progress": show_progress})
 
         def convert_output(response):
-            match endpoint:
-                case Endpoint.select:
-                    return SelectResponse(**response)
-                case Endpoint.analyse:
-                    return AnalyseResponse(**response)
-                case Endpoint.create:
-                    return CreateResponse(**response)
-                case Endpoint.tokenize:
-                    return TokenizeResponse(**response)
+            if endpoint == Endpoint.select:
+                return SelectResponse(**response)
+            elif endpoint == Endpoint.analyse:
+                return AnalyseResponse(**response)
+            elif endpoint == Endpoint.create:
+                return CreateResponse(**response)
+            elif endpoint == Endpoint.tokenize:
+                return TokenizeResponse(**response)
 
         if "responses" not in response:
             if "detail" in response:
@@ -78,16 +77,15 @@ class RemoteModel:
         yield from self.comm(data, Endpoint.stream_create, stream=True)
 
     def _post_objects(
-        self, objects: BaseModel | list[BaseModel], endpoint: Endpoint, show_progress: bool = False
-    ) -> list[SelectResponse] | list[AnalyseResponse] | list[CreateResponse] | list[TokenizeResponse] | ErrorResponse:
+        self, objects: Union[BaseModel, list[BaseModel]], endpoint: Endpoint, show_progress: bool = False
+    ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[TokenizeResponse], ErrorResponse]:
         def compute_num_tasks(obj) -> int:
-            match endpoint:
-                case Endpoint.create:
-                    return obj.params.n_completions
-                case Endpoint.select:
-                    return len(obj.candidates)
-                case _:
-                    return 1
+            if endpoint == Endpoint.create:
+                return obj.params.n_completions
+            elif endpoint == Endpoint.select:
+                return len(obj.candidates)
+            else:
+                return 1
 
         if isinstance(objects, list):
             num_tasks = sum([compute_num_tasks(obj) for obj in objects])
@@ -97,7 +95,7 @@ class RemoteModel:
             data = objects.dict()
         return self._post(data, endpoint, num_tasks=num_tasks, show_progress=show_progress)
 
-    def _get_params(self, params: CreateParameters | None = None, **kwargs) -> dict[str, Any]:
+    def _get_params(self, params: Optional[CreateParameters] = None, **kwargs) -> dict[str, Any]:
         if params is None:
             params = CreateParameters()
         if kwargs:
@@ -106,18 +104,18 @@ class RemoteModel:
 
     def _format_single_request_output(
         self,
-        response: list[CreateResponse]
-        | list[AnalyseResponse]
-        | list[SelectResponse]
-        | list[TokenizeResponse]
-        | ErrorResponse,
-    ) -> CreateResponse | AnalyseResponse | SelectResponse | TokenizeResponse | ErrorResponse:
+        response: Union[list[CreateResponse],
+        list[AnalyseResponse],
+        list[SelectResponse],
+        list[TokenizeResponse],
+        ErrorResponse],
+    ) -> Union[CreateResponse, AnalyseResponse, SelectResponse, TokenizeResponse, ErrorResponse]:
         return response if isinstance(response, ErrorResponse) else response[0]
 
     @validate_arguments
     def create(
-        self, prompt: str, params: CreateParameters | None = None, show_progress: bool = False, **kwargs: Any
-    ) -> CreateResponse | ErrorResponse:
+        self, prompt: str, params: Optional[CreateParameters] = None, show_progress: bool = False, **kwargs: Any
+    ) -> Union[CreateResponse, ErrorResponse]:
         params = self._get_params(params, **kwargs)
         response = self._post(
             {"text": prompt, "params": params},
@@ -129,13 +127,13 @@ class RemoteModel:
 
     @validate_arguments
     def stream_create(
-        self, prompt: str, params: CreateParameters | None = None, **kwargs: Any
+        self, prompt: str, params: Optional[CreateParameters] = None, **kwargs: Any
     ) -> Generator[str, None, None]:
         params = self._get_params(params, **kwargs)
         return self._post_stream({"text": prompt, "params": params})
 
     @validate_arguments
-    def analyse(self, text: str, show_progress: bool = False) -> AnalyseResponse | ErrorResponse:
+    def analyse(self, text: str, show_progress: bool = False) -> Union[AnalyseResponse , ErrorResponse]:
         response = self._post({"text": text}, Endpoint.analyse, num_tasks=1, show_progress=show_progress)
         return self._format_single_request_output(response)
 
@@ -144,12 +142,12 @@ class RemoteModel:
         self,
         reference: str,
         candidates: list[str],
-        conjunction: str | None = None,
+        conjunction: Optional[str] = None,
         evaluate_reference: bool = False,
         return_is_greedy_generation: bool = False,
         return_log_probs: bool = False,
         show_progress: bool = False,
-    ) -> SelectResponse | ErrorResponse:
+    ) -> Union[SelectResponse, ErrorResponse]:
         response = self._post(
             {
                 "reference": reference,
@@ -166,32 +164,32 @@ class RemoteModel:
         return self._format_single_request_output(response)
 
     @validate_arguments
-    def tokenize(self, text: str, show_progress: bool = False) -> TokenizeResponse | ErrorResponse:
+    def tokenize(self, text: str, show_progress: bool = False) -> Union[TokenizeResponse, ErrorResponse]:
         response = self._post({"text": text}, Endpoint.tokenize, num_tasks=1, show_progress=show_progress)
         return self._format_single_request_output(response)
 
     @validate_arguments
     def create_from_objects(
-        self, create_obj: CreateRequest | list[CreateRequest], show_progress: bool = False
-    ) -> list[CreateResponse] | ErrorResponse:
+        self, create_obj: Union[CreateRequest, list[CreateRequest]], show_progress: bool = False
+    ) -> Union[list[CreateResponse], ErrorResponse]:
         return self._post_objects(create_obj, Endpoint.create, show_progress=show_progress)
 
     @validate_arguments
     def analyse_from_objects(
-        self, analyse_obj: AnalyseRequest | list[AnalyseRequest], show_progress: bool = False
-    ) -> list[AnalyseResponse] | ErrorResponse:
+        self, analyse_obj: Union[AnalyseRequest, list[AnalyseRequest]], show_progress: bool = False
+    ) -> Union[list[AnalyseResponse], ErrorResponse]:
         return self._post_objects(analyse_obj, Endpoint.analyse, show_progress=show_progress)
 
     @validate_arguments
     def select_from_objects(
-        self, select_obj: SelectRequest | list[SelectRequest], show_progress: bool = False
-    ) -> list[SelectResponse] | ErrorResponse:
+        self, select_obj: Union[SelectRequest, list[SelectRequest]], show_progress: bool = False
+    ) -> Union[list[SelectResponse], ErrorResponse]:
         return self._post_objects(select_obj, Endpoint.select, show_progress=show_progress)
 
     @validate_arguments
     def tokenize_from_objects(
-        self, tokenize_obj: TokenizeRequest | list[TokenizeRequest], show_progress: bool = False
-    ) -> list[TokenizeResponse] | ErrorResponse:
+        self, tokenize_obj: Union[TokenizeRequest, list[TokenizeRequest]], show_progress: bool = False
+    ) -> Union[list[TokenizeResponse], ErrorResponse]:
         return self._post_objects(tokenize_obj, Endpoint.tokenize, show_progress=show_progress)
 
     def _wait_for_model_server(self):

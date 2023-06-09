@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from re import Pattern
+from typing import Optional, Union
 
 from pydantic import BaseModel, validator, Field
 
@@ -29,10 +30,10 @@ class CreateParameters(BaseModel):
     top_p: float = 0.9  # p parameter for nucleus sampling
     n_completions: int = 1  # number of generated samples per input
     generate_stop: bool = True
-    seed: int | None = None  # set the seed for the sampling phase
+    seed: Optional[int] = None  # set the seed for the sampling phase
     show_special_tokens: bool = False
     biases: dict[int, float] = Field(default_factory=dict)
-    stop_regex: Pattern | None = None
+    stop_regex: Optional[Pattern] = None
     prettify: bool = True
     return_log_probs: bool = False
     echo: bool = False
@@ -94,7 +95,7 @@ def is_empty_text(txt: str) -> bool:
     return not txt
 
 
-def check_text(text: str | list[str]) -> str | list[str]:
+def check_text(text: Union[str, list[str]]) -> Union[str, list[str]]:
     def validate(t: str):
         if is_empty_text(t):
             raise ValueError(f"Receive empty text. Abort")
@@ -115,7 +116,7 @@ class Progress:
 
 class CreateRequest(BaseModel):
     text: str
-    params: CreateParameters | None = None
+    params: Optional[CreateParameters] = None
     _validate_text = validator("text", allow_reuse=True)(check_text)
 
     @validator("params", always=True, pre=True)
@@ -160,7 +161,7 @@ class AnalyseRequest(BaseModel):
 class SelectRequest(BaseModel):
     reference: str
     candidates: list[str]
-    conjunction: str | None = None
+    conjunction: Optional[str] = None
     evaluate_reference: bool = False
     return_is_greedy_generation: bool = False
     return_log_probs: bool = False
