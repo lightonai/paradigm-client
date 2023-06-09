@@ -201,11 +201,11 @@ class RemoteModel:
             print_logs(f".", end="", verbose=self.verbose)
             time.sleep(10.0)
             counter += 1
-            if counter > 60:
+            if counter > 4:
                 break
         if self.comm.is_available():
             print_logs(" ModelServer is ready!", verbose=self.verbose)
         else:
-            print(
+            raise ConnectionError(
                 "We're sorry, but the ModelServer is currently unavailable. Please try again later. If you continue to experience issues, please contact our support team for further assistance. Thank you."
             )
