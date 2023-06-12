@@ -26,7 +26,7 @@ class Status(str, Enum):
 
 class CreateParameters(BaseModel):
     n_tokens: int = 20  # number of tokens to generate
-    temperature: float = 1.0  # temperature to apply to the logits
+    temperature: float = 0.7  # temperature to apply to the logits
     top_p: float = 0.9  # p parameter for nucleus sampling
     n_completions: int = 1  # number of generated samples per input
     generate_stop: bool = True
