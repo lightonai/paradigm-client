@@ -36,5 +36,5 @@ print(model.create("Hello, I am").completions[0].output_text)
 
 ## Access to LightOn Paradigm
 
-Try our Paradigm LLM at https://www.lighton.ai/fr/paradigm.
-See some Paradigm user cases at https://www.lighton.ai/fr/blog/ai-use-case-5.
+Learn more about Paradigm: https://www.lighton.ai/fr/paradigm.
+For a list of use cases: https://www.lighton.ai/fr/blog/ai-use-case-5.
