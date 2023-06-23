@@ -13,7 +13,7 @@ from paradigm_client.request import CreateParameters
 
 
 class MiniLLM(LLM):
-    def __init__(self, host, paradigm_api_key, verbose, **kwargs):
+    def __init__(self, host, paradigm_api_key, verbose=True, **kwargs):
         os.environ['PARADIGM_API_KEY'] = paradigm_api_key
         super().__init__(
             client=RemoteModel(host, model_name="llm-mini", verbose=verbose),
@@ -26,7 +26,7 @@ class MiniLLM(LLM):
     client: RemoteModel
     stop_words: list[str] | None = None
     n_tokens: int = 20  # number of tokens to generate
-    temperature: float = 1.0  # temperature to apply to the logits
+    temperature: float = 0.7  # temperature to apply to the logits
     top_p: float = 0.9  # p parameter for nucleus sampling
     n_completions: int = 1  # number of generated samples per input
     generate_stop: bool = True
@@ -64,7 +64,7 @@ class MiniLLM(LLM):
 
     @property
     def _llm_type(self) -> str:
-        return "quadriton"
+        return "paradigm"
 
     def _call(
         self,
