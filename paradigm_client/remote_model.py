@@ -114,11 +114,11 @@ class RemoteModel:
 
     @validate_arguments
     def create(
-        self, prompt: str, params: Optional[CreateParameters] = None, show_progress: bool = False, **kwargs: Any
+        self, prompt: str, params: Optional[CreateParameters] = None, use_session: bool = True, show_progress: bool = False, **kwargs: Any
     ) -> Union[CreateResponse, ErrorResponse]:
         params = self._get_params(params, **kwargs)
         response = self._post(
-            {"text": prompt, "params": params},
+            {"text": prompt, "params": params, "use_session": use_session},
             Endpoint.create,
             num_tasks=params.get("n_completions", 1),
             show_progress=show_progress,

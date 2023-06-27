@@ -117,6 +117,7 @@ class Progress:
 class CreateRequest(BaseModel):
     text: str
     params: Optional[CreateParameters] = None
+    use_session: bool = True,
     _validate_text = validator("text", allow_reuse=True)(check_text)
 
     @validator("params", always=True, pre=True)
