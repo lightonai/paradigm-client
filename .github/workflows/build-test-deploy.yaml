@@ -42,8 +42,10 @@ jobs:
 
       - name: Test package
         run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
           pip install dist/*.whl
-          python tests/example.py
+          python3 -m pytest
 
       #      - name: Publish to TestPyPI
       #        uses: pypa/gh-action-pypi-publish@release/v1
