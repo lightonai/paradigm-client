@@ -45,7 +45,7 @@ class RemoteModel:
         self.base_address = re.sub(r"\/+$", "", self.base_address)
 
         self.base_headers = {"Content-Type": "application/json", "Accept": "application/json"}
-        updated_headers = self.base_headers | {"X-API-KEY": self._api_key, "X-Model": str(model_name)}
+        updated_headers = {**self.base_headers, **{"X-API-KEY": self._api_key, "X-Model": str(model_name)}}
         self.comm = comm or Communicator(
             self.base_address,
             headers or updated_headers,
@@ -216,7 +216,7 @@ class RemoteModel:
         """
         response = requests.post(
             f"{self.base_address}/api/v1/rate/{rating_id}/{completion_id}",
-            headers=self.base_headers | {'Authorization': f'Api-Key {self._api_key}'},
+            headers={**self.base_headers, **{'Authorization': f'Api-Key {self._api_key}'}},
             json=data)
         return FeedbackResponse(status_code=response.status_code)
 
