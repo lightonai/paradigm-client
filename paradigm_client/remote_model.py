@@ -1,6 +1,8 @@
 import os
+import re
 import time
-from typing import Any, Generator, Optional, Union
+from typing import Any, Generator, Optional, Union, Dict, Literal
+import requests
 
 from pydantic import BaseModel, validate_arguments
 
@@ -12,8 +14,10 @@ from .request import (
     TokenizeRequest,
     Endpoint,
 )
-from .response import CreateResponse, AnalyseResponse, SelectResponse, TokenizeResponse, ErrorResponse
+from .response import CreateResponse, AnalyseResponse, SelectResponse, TokenizeResponse, ErrorResponse, FeedbackResponse
 from .communicator import Communicator
+
+DEFAULT_BASE_ADDRESS = "https://paradigm.lighton.ai"
 
 
 def print_logs(msg, end: Optional[str] = None, verbose: bool = False):
@@ -31,19 +35,24 @@ class RemoteModel:
         comm=None,
         raise_for_status: bool = False,
         model_name: Optional[str] = None,
+        api_key: Optional[str] = None
     ) -> None:
-        self.verbose = verbose
-        assert base_address is not None or comm is not None, "You must provide base_address or comm"
-        base_headers = {"Content-Type": "application/json", "Accept": "application/json"} | {
-            "X-API-KEY": os.environ.get("PARADIGM_API_KEY", str(None)),
-            "X-Model": str(model_name),
-        }
+        self._api_key = api_key if api_key is not None else os.environ.get("PARADIGM_API_KEY", str(None))
+        assert api_key != str(None), "You must provide an API key through the PARADIGM_API_KEY environment variable or the api_key parameter"
+
+        self.base_address = DEFAULT_BASE_ADDRESS if base_address is None else base_address
+        # Remove '/' at the end of the given base address
+        self.base_address = re.sub(r"\/+$", "", self.base_address)
+
+        self.base_headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        updated_headers = {**self.base_headers, **{"X-API-KEY": self._api_key, "X-Model": str(model_name)}}
         self.comm = comm or Communicator(
-            base_address,
-            headers or base_headers,
+            self.base_address,
+            headers or updated_headers,
             timeout_s,
             raise_for_status=raise_for_status,
         )
+        self.verbose = verbose
         self._wait_for_model_server()
 
     def _post(
@@ -191,6 +200,25 @@ class RemoteModel:
         self, tokenize_obj: Union[TokenizeRequest, list[TokenizeRequest]], show_progress: bool = False
     ) -> Union[list[TokenizeResponse], ErrorResponse]:
         return self._post_objects(tokenize_obj, Endpoint.tokenize, show_progress=show_progress)
+
+    def log_feedback(
+            self,
+            rating_id: Union[int, str],
+            completion_id: str,
+            data: Dict[Literal["flag", "value", "tag", "comment"], Union[float, str, bool]]
+    ):
+        """
+        Log a feedback into Paradigm.
+        :param rating_id: ID of the feedback type to use; must be created in Paradigm beforehand
+        :param completion_id: ID of the completion to link the feedback to. Can be obtained from a llm response.
+        :param data: Actual feedback data. Must be a dictionary
+        :return: FeedbackResponse object with the HTTP status code
+        """
+        response = requests.post(
+            f"{self.base_address}/api/v1/rate/{rating_id}/{completion_id}",
+            headers={**self.base_headers, **{'Authorization': f'Api-Key {self._api_key}'}},
+            json=data)
+        return FeedbackResponse(status_code=response.status_code)
 
     def _wait_for_model_server(self):
         print_logs(f"Waiting for the ModelServer to be ready", end="", verbose=self.verbose)

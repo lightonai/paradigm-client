@@ -64,3 +64,7 @@ class ErrorResponse(BaseModel):
 
     def pickle(self):
         return pickle.dumps((self.dict(), None), protocol=pickle.HIGHEST_PROTOCOL)
+
+
+class FeedbackResponse(BaseModel):
+    status_code: int
