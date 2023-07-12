@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from enum import Enum
+import os
 from re import Pattern
 from typing import Optional, Union
 
 from pydantic import BaseModel, validator, Field
 
 
-MAX_SEQ_LEN = 2048
+MAX_SEQ_LEN = int(os.environ.get("MAX_SEQ_LEN", 2048))
 
 
 class Endpoint(str, Enum):
