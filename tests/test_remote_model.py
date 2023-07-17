@@ -1,5 +1,6 @@
 from paradigm_client.response import CreateResponse, SelectResponse, TokenizeResponse
 from paradigm_client.remote_model import RemoteModel, DEFAULT_BASE_ADDRESS
+from unittest import mock
 import pytest
 import os
 
@@ -24,6 +25,15 @@ def test_should_use_default_address_when_given_explicit_none():
 def test_should_remove_the_slashes_at_the_end_of_base_address():
     model = RemoteModel(DEFAULT_BASE_ADDRESS + "/////", model_name="llm-mini")
     assert model.base_address == DEFAULT_BASE_ADDRESS
+
+
+def test_should_raise_error_when_no_api_key_available():
+    # Locally removing the PARADIGM_API_KEY variable from the environment
+    names_to_remove = {"PARADIGM_API_KEY"}
+    modified_environ = {k: v for k, v in os.environ.items() if k not in names_to_remove}
+    with mock.patch.dict(os.environ, modified_environ, clear=True):
+        with pytest.raises(AssertionError, match="You must provide an API key through the PARADIGM_API_KEY environment variable or the api_key parameter"):
+            model = RemoteModel(model_name="llm-mini")
 
 
 def test_create(remote_model: RemoteModel):

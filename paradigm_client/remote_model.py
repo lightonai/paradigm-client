@@ -38,7 +38,7 @@ class RemoteModel:
         api_key: Optional[str] = None
     ) -> None:
         self._api_key = api_key if api_key is not None else os.environ.get("PARADIGM_API_KEY", str(None))
-        assert api_key != str(None), "You must provide an API key through the PARADIGM_API_KEY environment variable or the api_key parameter"
+        assert self._api_key != str(None), "You must provide an API key through the PARADIGM_API_KEY environment variable or the api_key parameter"
 
         self.base_address = DEFAULT_BASE_ADDRESS if base_address is None else base_address
         # Remove '/' at the end of the given base address
