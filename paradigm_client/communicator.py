@@ -137,11 +137,11 @@ class Communicator(AbstractCommunicator):
 
 
 class SagemakerCommunicator(AbstractCommunicator):
-    def __init__(self, endpoint_name: str) -> None:
+    def __init__(self, endpoint_name: str, *args, **kwargs) -> None:
         self.endpoint_name = endpoint_name
         assert IS_BOTO3_AVAILABLE, "boto3 is required to use the Sagemaker client"
-        self._runtime_sm_client = boto3.client("sagemaker-runtime")
-        self._sm_client = boto3.client("sagemaker")
+        self._runtime_sm_client = boto3.client("sagemaker-runtime", *args, **kwargs)
+        self._sm_client = boto3.client("sagemaker", *args, **kwargs)
 
         self.model_name: str | None = None
 
