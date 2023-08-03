@@ -37,17 +37,17 @@ class RemoteModel:
         model_name: Optional[str] = None,
         api_key: Optional[str] = None
     ) -> None:
-        self._api_key = api_key if api_key is not None else os.environ.get("PARADIGM_API_KEY", str(None))
+        self._api_key = api_key if api_key is not None else os.environ.get("PARADIGM_API_KEY", None)
         # Do not check for an API key if the communicator is for Sagemaker
         if not isinstance(comm, SagemakerCommunicator):
-            assert self._api_key != str(None), "You must provide an API key through the PARADIGM_API_KEY environment variable or the api_key parameter"
+            assert self._api_key is not None, "You must provide an API key through the PARADIGM_API_KEY environment variable or the api_key parameter"
 
         self.base_address = DEFAULT_BASE_ADDRESS if base_address is None else base_address
         # Remove '/' at the end of the given base address
         self.base_address = re.sub(r"\/+$", "", self.base_address)
 
         self.base_headers = {"Content-Type": "application/json", "Accept": "application/json"}
-        updated_headers = {**self.base_headers, **{"X-API-KEY": self._api_key, "X-Model": str(model_name)}}
+        updated_headers = {**self.base_headers, **{"X-API-KEY": str(self._api_key), "X-Model": str(model_name)}}
         self.comm = comm or Communicator(
             self.base_address,
             headers or updated_headers,
@@ -245,4 +245,4 @@ class RemoteModel:
         Checks if no API key has been set
         :return: boolean to False if the private api_key attribute has a different value than the default "None" string
         """
-        return self._api_key == str(None)
+        return self._api_key is None
