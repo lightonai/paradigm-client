@@ -85,7 +85,7 @@ class RemoteModel:
         return outputs
 
     def _post_stream(self, data: Any) -> Generator[str, None, None]:
-        yield from self.comm(data, Endpoint.stream_create, stream=True)
+        return self.comm(data, Endpoint.stream_create, stream=True)
 
     def _post_objects(
         self, objects: Union[BaseModel, list[BaseModel]], endpoint: Endpoint, show_progress: bool = False
