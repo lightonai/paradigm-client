@@ -90,6 +90,7 @@ class Communicator(AbstractCommunicator):
                         await asyncio.sleep(2.0)
 
     def stream_response(self, data):
+        data["use_session"] = False
         stream = requests.post(  # TODO: implement stream with aiohttp
             f"{self.base_address}/llm/{Endpoint.stream_create.value}",
             json={"data": data},
@@ -97,7 +98,7 @@ class Communicator(AbstractCommunicator):
             timeout=self.timeout_s.total,
             stream=True,
         )
-        yield from stream.iter_content(chunk_size=1024, decode_unicode=True)
+        return stream.iter_lines(decode_unicode=True)
 
     def __call__(
         self, data: Any, endpoint: Endpoint, stream: bool, **kwargs
