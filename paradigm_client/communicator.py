@@ -9,7 +9,7 @@ import requests
 from tqdm import tqdm
 
 from .request import Endpoint, Progress, Status
-from .response import CreateResponse, AnalyseResponse, SelectResponse, TokenizeResponse, ErrorResponse
+from .response import CreateResponse, AnalyseResponse, SelectResponse, ScoreResponse, TokenizeResponse, ErrorResponse
 
 IS_BOTO3_AVAILABLE = True
 try:
@@ -103,7 +103,7 @@ class Communicator(AbstractCommunicator):
 
     def __call__(
         self, data: Any, endpoint: Endpoint, stream: bool, **kwargs
-    ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[TokenizeResponse], ErrorResponse, Generator[str, None, None]]:
+    ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[ScoreResponse], list[TokenizeResponse], ErrorResponse, Generator[str, None, None]]:
 
         if self.model_name is None:
             self.model_name = self.get_model_name()
@@ -139,11 +139,11 @@ class Communicator(AbstractCommunicator):
 
 
 class SagemakerCommunicator(AbstractCommunicator):
-    def __init__(self, endpoint_name: str) -> None:
+    def __init__(self, endpoint_name: str, region_name:str = "us-east-1") -> None:
         self.endpoint_name = endpoint_name
         assert IS_BOTO3_AVAILABLE, "boto3 is required to use the Sagemaker client"
-        self._runtime_sm_client = boto3.client("sagemaker-runtime")
-        self._sm_client = boto3.client("sagemaker")
+        self._runtime_sm_client = boto3.client("sagemaker-runtime", region_name=region_name)
+        self._sm_client = boto3.client("sagemaker", region_name=region_name)
 
         self.model_name: str | None = None
 
