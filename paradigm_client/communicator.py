@@ -90,7 +90,8 @@ class Communicator(AbstractCommunicator):
                         await asyncio.sleep(2.0)
 
     def stream_response(self, data):
-        data["use_session"] = False
+        data["params"]["prettify"] = False # prettify option causes strange behavior on the completion
+        data["use_session"] = False # streaming with use_session=True is currently not supported
         stream = requests.post(  # TODO: implement stream with aiohttp
             f"{self.base_address}/llm/{Endpoint.stream_create.value}",
             json={"data": data},
