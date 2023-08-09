@@ -16,6 +16,7 @@ class Endpoint(str, Enum):
     stream_tokens = "stream_tokens"
     analyse = "analyse"
     select = "select"
+    score = "score"
     tokenize = "tokenize"
 
 
@@ -175,6 +176,13 @@ class SelectRequest(BaseModel):
     @validator("candidates")
     def check_candidates(cls, candidates, values):
         return check_text(candidates)
+
+
+class ScoreRequest(BaseModel):
+    text: str
+
+    class Config:
+        extra: str = "forbid"
 
 
 class TokenizeRequest(BaseModel):
