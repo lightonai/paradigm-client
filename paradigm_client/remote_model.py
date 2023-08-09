@@ -10,11 +10,12 @@ from .request import (
     CreateRequest,
     CreateParameters,
     AnalyseRequest,
+    ScoreRequest,
     SelectRequest,
     TokenizeRequest,
     Endpoint,
 )
-from .response import CreateResponse, AnalyseResponse, SelectResponse, TokenizeResponse, ErrorResponse, FeedbackResponse
+from .response import CreateResponse, AnalyseResponse, SelectResponse, TokenizeResponse, ErrorResponse, FeedbackResponse, ScoreResponse
 from .communicator import Communicator, SagemakerCommunicator
 
 DEFAULT_BASE_ADDRESS = "https://paradigm.lighton.ai"
@@ -59,7 +60,7 @@ class RemoteModel:
 
     def _post(
         self, data: Any, endpoint: Endpoint, num_tasks: int, show_progress: bool = True
-    ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[TokenizeResponse], ErrorResponse]:
+    ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[ScoreResponse], list[TokenizeResponse], ErrorResponse]:
 
         response = self.comm(data, endpoint, stream=False, **{"num_tasks": num_tasks, "show_progress": show_progress})
 
@@ -72,7 +73,8 @@ class RemoteModel:
                 return CreateResponse(**response)
             elif endpoint == Endpoint.tokenize:
                 return TokenizeResponse(**response)
-
+            elif endpoint == Endpoint.score:
+                return ScoreResponse(**response)
         if "responses" not in response:
             if "detail" in response:
                 return ErrorResponse(
@@ -118,9 +120,10 @@ class RemoteModel:
         response: Union[list[CreateResponse],
         list[AnalyseResponse],
         list[SelectResponse],
+        list[ScoreResponse],
         list[TokenizeResponse],
         ErrorResponse],
-    ) -> Union[CreateResponse, AnalyseResponse, SelectResponse, TokenizeResponse, ErrorResponse]:
+    ) -> Union[CreateResponse, AnalyseResponse, SelectResponse, ScoreResponse, TokenizeResponse, ErrorResponse]:
         return response if isinstance(response, ErrorResponse) else response[0]
 
     @validate_arguments
@@ -175,6 +178,11 @@ class RemoteModel:
         return self._format_single_request_output(response)
 
     @validate_arguments
+    def score(self, text:str, show_progress: bool = False) -> Union[ScoreResponse, ErrorResponse]:
+        response = self._post({"text": text}, Endpoint.score, num_tasks=1, show_progress=show_progress)
+        return self._format_single_request_output(response)
+
+    @validate_arguments
     def tokenize(self, text: str, show_progress: bool = False) -> Union[TokenizeResponse, ErrorResponse]:
         response = self._post({"text": text}, Endpoint.tokenize, num_tasks=1, show_progress=show_progress)
         return self._format_single_request_output(response)
@@ -196,6 +204,13 @@ class RemoteModel:
         self, select_obj: Union[SelectRequest, list[SelectRequest]], show_progress: bool = False
     ) -> Union[list[SelectResponse], ErrorResponse]:
         return self._post_objects(select_obj, Endpoint.select, show_progress=show_progress)
+
+    @validate_arguments
+    def score_from_objects(
+        self, score_obj: Union[ScoreRequest, list[ScoreRequest]], show_progress: bool = False
+    ) -> Union[list[ScoreResponse], ErrorResponse]:
+        return self._post_objects(score_obj, Endpoint.score, show_progress=show_progress)
+    
 
     @validate_arguments
     def tokenize_from_objects(

@@ -47,6 +47,9 @@ class SelectResponse(BaseModel):
     rankings: Optional[list[Rankings]]
     best: str
 
+class ScoreResponse(BaseModel):
+    text: str
+    score: float
 
 class TokenizeResponse(BaseModel):
     text: str
