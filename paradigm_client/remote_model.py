@@ -4,6 +4,7 @@ import time
 from typing import Any, Generator, Optional, Union, Dict, Literal
 import requests
 
+import aiohttp
 from pydantic import BaseModel, validate_arguments
 
 from .request import (
@@ -62,29 +63,34 @@ class RemoteModel:
         self, data: Any, endpoint: Endpoint, num_tasks: int, show_progress: bool = True
     ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[ScoreResponse], list[TokenizeResponse], ErrorResponse]:
 
-        response = self.comm(data, endpoint, stream=False, **{"num_tasks": num_tasks, "show_progress": show_progress})
+        try:
+            response = self.comm(data, endpoint, stream=False, **{"num_tasks": num_tasks, "show_progress": show_progress})
 
-        def convert_output(response):
-            if endpoint == Endpoint.select:
-                return SelectResponse(**response)
-            elif endpoint == Endpoint.analyse:
-                return AnalyseResponse(**response)
-            elif endpoint == Endpoint.create:
-                return CreateResponse(**response)
-            elif endpoint == Endpoint.tokenize:
-                return TokenizeResponse(**response)
-            elif endpoint == Endpoint.score:
-                return ScoreResponse(**response)
-        if "responses" not in response:
-            if "detail" in response:
-                return ErrorResponse(
-                    request_id="", error_msg=response.get("detail"), status_code=response.get("status_code")
-                )
-            return ErrorResponse(**response)
+            def convert_output(response):
+                if endpoint == Endpoint.select:
+                    return SelectResponse(**response)
+                elif endpoint == Endpoint.analyse:
+                    return AnalyseResponse(**response)
+                elif endpoint == Endpoint.create:
+                    return CreateResponse(**response)
+                elif endpoint == Endpoint.tokenize:
+                    return TokenizeResponse(**response)
+                elif endpoint == Endpoint.score:
+                    return ScoreResponse(**response)
+            if "responses" not in response:
+                if "detail" in response:
+                    return ErrorResponse(
+                        request_id="", error_msg=response.get("detail"), status_code=response.get("status_code")
+                    )
+                return ErrorResponse(**response)
 
-        outputs = [convert_output(r) for r in response["responses"]]
+            outputs = [convert_output(r) for r in response["responses"]]
 
-        return outputs
+            return outputs
+        except aiohttp.ContentTypeError as e:
+            return ErrorResponse(
+                        request_id="", error_msg="An unexpected error occurred. Contact Paradigm Support at support@lighton.ai", status_code=500
+                    )
 
     def _post_stream(self, data: Any) -> Generator[str, None, None]:
         return self.comm(data, Endpoint.stream_create, stream=True)
