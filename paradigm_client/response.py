@@ -23,6 +23,7 @@ class CreateCandidatesOutput(BaseModel):
     log_probs: Optional[LogProbs]
     finish_reason: FinishReason
     completion_id: Optional[str] = None
+    session_id: Optional[str] = None
 
 
 class CreateResponse(BaseModel):

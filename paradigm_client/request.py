@@ -120,6 +120,7 @@ class CreateRequest(BaseModel):
     text: str
     params: Optional[CreateParameters] = None
     use_session: bool = True,
+    session_id: list[str] | None = None
     _validate_text = validator("text", allow_reuse=True)(check_text)
 
     @validator("params", always=True, pre=True)
