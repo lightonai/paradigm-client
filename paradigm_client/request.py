@@ -179,10 +179,21 @@ class SelectRequest(BaseModel):
 
 
 class ScoreRequest(BaseModel):
-    text: str
+    prompt: str
+    candidates: list[str]
+    use_session: bool = True
+    session_id: list[str] | None = None
 
     class Config:
         extra: str = "forbid"
+
+    @validator("candidates")
+    def check_candidates(cls, candidates, values):
+        if len(candidates) == 0:
+            raise ValueError("Candidates not found. Number of candidates should be higher than zero. Abort")
+        if len(candidates) > 12:
+            raise ValueError("The max number of candidates is 12. Abort")
+        return check_text(candidates)
 
 
 class TokenizeRequest(BaseModel):

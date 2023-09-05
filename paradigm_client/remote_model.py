@@ -178,9 +178,24 @@ class RemoteModel:
         return self._format_single_request_output(response)
 
     @validate_arguments
-    def score(self, text:str, show_progress: bool = False) -> Union[ScoreResponse, ErrorResponse]:
-        response = self._post({"text": text}, Endpoint.score, num_tasks=1, show_progress=show_progress)
-        return self._format_single_request_output(response)
+    def score(
+        self,
+        prompt: str,
+        candidates: list[str],
+        use_session: bool = False,
+        past_response: ScoreRequest | None = None,
+    ) -> ScoreResponse | ErrorResponse:
+        response = self._post(
+            {
+                "prompt": prompt,
+                "candidates": candidates,
+                "use_session": use_session,
+                "session_id": self._maybe_get_session_ids(past_response),
+            },
+            Endpoint.score,
+            num_tasks=len(candidates),
+        )
+        return self._format_single_request_output(response)  
 
     @validate_arguments
     def tokenize(self, text: str, show_progress: bool = False) -> Union[TokenizeResponse, ErrorResponse]:
@@ -207,10 +222,10 @@ class RemoteModel:
 
     @validate_arguments
     def score_from_objects(
-        self, score_obj: Union[ScoreRequest, list[ScoreRequest]], show_progress: bool = False
-    ) -> Union[list[ScoreResponse], ErrorResponse]:
-        return self._post_objects(score_obj, Endpoint.score, show_progress=show_progress)
-    
+        self, score_obj: ScoreRequest | list[ScoreRequest], show_progress: bool = False
+    ) -> list[ScoreResponse] | ErrorResponse:
+        return self._post_objects(score_obj, Endpoint.score, show_progress=show_progress
+    )
 
     @validate_arguments
     def tokenize_from_objects(
