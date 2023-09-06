@@ -1,6 +1,7 @@
 from paradigm_client.response import CreateResponse, SelectResponse, TokenizeResponse
 from paradigm_client.remote_model import RemoteModel, DEFAULT_BASE_ADDRESS
 from paradigm_client.communicator import SagemakerCommunicator
+from paradigm_client.request import CreateRequest
 from unittest import mock
 import pytest
 import os
@@ -67,6 +68,13 @@ def test_select(remote_model: RemoteModel):
 def test_tokenize(remote_model: RemoteModel):
     response = remote_model.tokenize("Test completion text:")
     assert isinstance(response, TokenizeResponse)
+
+
+# Related issue: https://github.com/lightonai/paradigm-client/issues/7
+def test_create_from_objects(remote_model: RemoteModel):
+    requests = CreateRequest(text="Hello I am")
+    response = remote_model.create_from_objects(requests)
+    assert isinstance(response[0], CreateResponse)
 
 
 def test_can_log_a_boolean_feedback(
