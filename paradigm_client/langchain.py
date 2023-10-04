@@ -1,22 +1,30 @@
-from typing import Mapping, Any, Optional
-from langchain.llms.base import LLM
-import re, os
-from re import Pattern
-from pydantic import Field
 from functools import partial
+import os
+import re
+from re import Pattern
+from typing import Mapping, Any, Optional, Union
 
-from langchain.llms.utils import enforce_stop_tokens
-from langchain.callbacks.manager import CallbackManagerForLLMRun
+try:
+    from langchain.llms.base import LLM
+    from langchain.callbacks.manager import CallbackManagerForLLMRun
+except ModuleNotFoundError:
+    raise ModuleNotFoundError(
+        "Please install langchain: pip install langchain"
+    )
+from pydantic import Field
+
 from paradigm_client.communicator import SagemakerCommunicator
 from paradigm_client.remote_model import RemoteModel
 from paradigm_client.request import CreateParameters
 
 
-class MiniLLM(LLM):
-    def __init__(self, host, paradigm_api_key, verbose=True, **kwargs):
-        os.environ['PARADIGM_API_KEY'] = paradigm_api_key
+DEFAULT_BASE_ADDRESS = "https://paradigm.lighton.ai"
+
+
+class ParadigmLLM(LLM):
+    def __init__(self, client, **kwargs):
         super().__init__(
-            client=RemoteModel(host, model_name="llm-mini", verbose=verbose),
+            client=client,
             **kwargs
         )
         self.stop_regex = self._transform_stop_words_to_regex(
@@ -24,23 +32,23 @@ class MiniLLM(LLM):
         )
         
     client: RemoteModel
-    stop_words: list[str] | None = None
+    stop_words: Optional[list[str]] = None
     n_tokens: int = 20  # number of tokens to generate
     temperature: float = 0.7  # temperature to apply to the logits
     top_p: float = 0.9  # p parameter for nucleus sampling
     n_completions: int = 1  # number of generated samples per input
     generate_stop: bool = True
-    seed: int | None = None  # set the seed for the sampling phase
+    seed: Optional[int] = None  # set the seed for the sampling phase
     show_special_tokens: bool = False
     biases: dict[int, float] = Field(default_factory=dict)
-    stop_regex: Pattern | None = None
+    stop_regex: Optional[Pattern] = None
     prettify: bool = True
     return_log_probs: bool = False
     echo: bool = False
 
     def _transform_stop_words_to_regex(
-        self, stop_words: list[str] | None, stop_regex: Pattern | None
-    ) -> Pattern | None:
+        self, stop_words: Optional[list[str]], stop_regex: Optional[Pattern]
+    ) -> Optional[Pattern]:
         if not stop_regex:  # we use stop_regex in remote models
             if stop_words:
                 return r"(?i)(" + "|".join(re.escape(word) for word in stop_words) + ")"
@@ -69,7 +77,7 @@ class MiniLLM(LLM):
     def _call(
         self,
         prompt: str,
-        stop: list[str] | None = None,
+        stop: Optional[list[str]] = None,
         run_manager: Optional[CallbackManagerForLLMRun] = None,
     ) -> str:
         if not stop:
@@ -85,14 +93,17 @@ class MiniLLM(LLM):
         if run_manager:
             text_callback = partial(run_manager.on_llm_new_token, verbose=self.verbose)
         text = ""
-        for completion in self.client.create(
-            prompt=prompt,
-            params=params,
-        ).completions:
-            if text_callback:
-                text_callback(completion)
-            text += completion.output_text
-        return text
+        try:
+            for completion in self.client.create(
+                prompt=prompt,
+                params=params,
+            ).completions:
+                if text_callback:
+                    text_callback(completion)
+                text += completion.output_text
+            return text
+        except Exception as e:
+            raise e
 
     @property
     def _identifying_params(self) -> Mapping[str, Any]:
