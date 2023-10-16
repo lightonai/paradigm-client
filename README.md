@@ -55,3 +55,7 @@ Here are the different steps to log a feedback:
 
 Learn more about Paradigm: https://www.lighton.ai/fr/paradigm.
 For a list of use cases: https://www.lighton.ai/fr/blog/ai-use-case-5.
+
+## Known Issues
+
+If you find that a `RemoteModel` instantiation and subsequent completions are unusually slow, it may be that your network does not support IPv6. Try disabling IPv6 and see if that helps.
