@@ -13,7 +13,7 @@ from llama_index.llms.custom import CustomLLM
 
 
 class ParadigmLLM(CustomLLM):
-    max_tokens: Optional[int]
+    n_tokens: Optional[int]
     model_name: str = Field(description="Model to use")
     generate_kwargs: dict = Field(default_factory=dict, description="Kwargs for generation.")
     _model: Any = PrivateAttr()
@@ -22,7 +22,7 @@ class ParadigmLLM(CustomLLM):
         self,
         api_key: Optional[str] = None,
         model_name: Optional[str] = "alfred-40b-0723",
-        max_tokens: Optional[int] = None,
+        n_tokens: Optional[int] = 20,
         callback_manager: Optional[CallbackManager] = None,
         **generate_kwargs: Any,
     ) -> None:
@@ -42,7 +42,7 @@ class ParadigmLLM(CustomLLM):
         generate_kwargs = generate_kwargs or {}
         super().__init__(
             model_name=model_name,
-            max_tokens=max_tokens,
+            n_tokens=n_tokens,
             generate_kwargs=generate_kwargs,
             callback_manager=callback_manager,
         )
@@ -57,7 +57,7 @@ class ParadigmLLM(CustomLLM):
 
         return LLMMetadata(
             context_window=MAX_SEQ_LEN,
-            num_output=self.max_tokens,
+            num_output=self.n_tokens,
             model_name=self.model_name,
         )
 
@@ -65,7 +65,13 @@ class ParadigmLLM(CustomLLM):
     def complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
         from paradigm_client.request import CreateParameters, CreateRequest
 
+        if "n_tokens" not in kwargs:
+            kwargs["n_tokens"] = self.n_tokens
+        if "temperature" not in kwargs and "temperature" in self.generate_kwargs:
+            kwargs["temperature"] = self.generate_kwargs["temperature"]
+
         params = CreateParameters(**kwargs)
+
         request = CreateRequest(text=prompt, params=params, use_session=True)
         response = self._model.create_from_objects(request)
         try:
