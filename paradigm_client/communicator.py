@@ -1,7 +1,8 @@
-from abc import abstractmethod, ABC
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
+import copy
 import json
+from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Generator, Optional, Union
 
 import aiohttp
@@ -9,7 +10,8 @@ import requests
 from tqdm import tqdm
 
 from .request import Endpoint, Progress, Status
-from .response import CreateResponse, AnalyseResponse, SelectResponse, ScoreResponse, TokenizeResponse, ErrorResponse
+from .response import (AnalyseResponse, CreateResponse, ErrorResponse,
+                       ScoreResponse, SelectResponse, TokenizeResponse)
 
 IS_BOTO3_AVAILABLE = True
 try:
@@ -89,11 +91,11 @@ class Communicator(AbstractCommunicator):
                             pbar.update(delta)
                         await asyncio.sleep(2.0)
 
-    def stream_response(self, data):
+    def stream_response(self, data: Any, endpoint: Endpoint):
         data["params"]["prettify"] = False # prettify option causes strange behavior on the completion
-        data["use_session"] = False # streaming with use_session=True is currently not supported
+        data["use_session"] = True
         stream = requests.post(  # TODO: implement stream with aiohttp
-            f"{self.base_address}/llm/{Endpoint.stream_create.value}",
+            f"{self.base_address}/llm/{endpoint.value}",
             json={"data": data},
             headers=self.headers,
             timeout=self.timeout_s.total,
@@ -121,7 +123,7 @@ class Communicator(AbstractCommunicator):
             tasks.append(self._post(data, endpoint, session_id))
             return _safe_run_tasks(tasks)[-1]
         else:
-            return self.stream_response(data)
+            return self.stream_response(data, endpoint)
 
     def get_model_name(self) -> str:
         return requests.get(f"{self.base_address}/model").text
@@ -179,14 +181,37 @@ class SagemakerCommunicator(AbstractCommunicator):
                 if delta > 0:
                     pbar.update(delta)
                 await asyncio.sleep(2.0)
+    
+    def decode_line(self, line):
+        if line.startswith("data: [DONE]"):
+            return ""
+        elif line.startswith("data: "):
+            parts = line.split("data: ")[1].strip()
+            return json.loads(parts)["text"]
+        else:
+            return ""
 
-    def stream_response(self, data):
-        session_id = _safe_run_tasks([self._post(data, Endpoint.stream_create)])[0].pop('request_id')
-        done = False
-        while not done:
-            stream_tokens = _safe_run_tasks([self._post({}, Endpoint.stream_tokens, session_id=session_id)])[0]
-            yield ''.join(stream_tokens.get('tokens'))
-            done = stream_tokens.get('done')
+    def stream_response(self, data: Any, endpoint: Endpoint):
+        body = {"data": data, "endpoint": f"/llm/{endpoint.value}"}
+        body["data"]["params"]["prettify"] = False # prettify option causes strange behavior on the completion
+        body["data"]["use_session"] = True
+        response = self._runtime_sm_client.invoke_endpoint_with_response_stream(
+            EndpointName=self.endpoint_name,
+            Body=json.dumps(body),
+            ContentType="application/json",
+            Accept="application/json",
+        )
+        last_line = ""
+        for r in response["Body"]:
+            line = r["PayloadPart"]["Bytes"].decode("utf-8")
+            try:
+                payload = last_line + line
+                decoded = self.decode_line(payload)
+                yield payload
+                last_line = ""
+            except:
+                decoded = ""
+                last_line = copy.deepcopy(line)
 
     def __call__(
         self, data: Any, endpoint: Endpoint, stream: bool, **kwargs
@@ -207,7 +232,7 @@ class SagemakerCommunicator(AbstractCommunicator):
             tasks.append(self._post(data, endpoint, session_id))
             return _safe_run_tasks(tasks)[-1]
         else:
-            return self.stream_response(data)
+            return self.stream_response(data, endpoint)
 
     def get_model_name(self) -> str:
         return self._invoke_endpoint("/model")

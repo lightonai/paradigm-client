@@ -1,11 +1,10 @@
+import os
 from dataclasses import dataclass
 from enum import Enum
-import os
 from re import Pattern
 from typing import Optional, Union
 
-from pydantic import BaseModel, validator, Field
-
+from pydantic import BaseModel, Field, validator
 
 MAX_SEQ_LEN = int(os.environ.get("MAX_SEQ_LEN", 2048))
 
@@ -13,7 +12,8 @@ MAX_SEQ_LEN = int(os.environ.get("MAX_SEQ_LEN", 2048))
 class Endpoint(str, Enum):
     create = "create"
     stream_create = "stream_create"
-    stream_tokens = "stream_tokens"
+    chat = "chat"
+    stream_chat = "stream_chat"
     analyse = "analyse"
     select = "select"
     score = "score"
@@ -35,7 +35,7 @@ class CreateParameters(BaseModel):
     seed: Optional[int] = None  # set the seed for the sampling phase
     show_special_tokens: bool = False
     biases: dict[int, float] = Field(default_factory=dict)
-    stop_regex: Optional[Pattern] = None
+    stop_sequences: Optional[list[str]] = None
     prettify: bool = True
     return_log_probs: bool = False
     echo: bool = False
@@ -86,12 +86,6 @@ class CreateParameters(BaseModel):
                 raise ValueError(f"bias_value from should satisfy -100.0 <= bias <= 100.0. Found {bias_value}")
         return biases
 
-    def dict(self, *args, **kwargs):
-        d = super().dict(*args, **kwargs)
-        if self.stop_regex is not None and isinstance(self.stop_regex, Pattern):
-            d |= {"stop_regex": self.stop_regex.pattern}  # hack to serialize stop_regex (obj -> dict -> json)
-        return d
-
 
 def is_empty_text(txt: str) -> bool:
     return not txt
@@ -108,6 +102,44 @@ def check_text(text: Union[str, list[str]]) -> Union[str, list[str]]:
         for t in text:
             validate(t)
     return text
+
+
+def check_messages(
+    messages: list[dict[str, str]] | list[list[dict[str, str]]]
+) -> list[dict[str, str]] | list[list[dict[str, str]]]:
+    def validate(t: list[dict[str, str]]):
+        if len(t) == 0:
+            raise ValueError("Received empty messages. Abort")
+
+        valid_roles = ["system", "user", "assistant"]
+
+        for message in t:
+            if not isinstance(message, dict):
+                raise ValueError("Each message should be a dictionary.")
+
+            if "role" not in message:
+                raise ValueError("Role key is missing in a message.")
+
+            if message["role"] not in valid_roles:
+                raise ValueError(
+                    f"Invalid role '{message['role']}' in a message. Role should be one of {', '.join(valid_roles)}."
+                )
+
+            if "content" not in message:
+                raise ValueError("Content key is missing in a message.")
+
+            if not isinstance(message["role"], str):
+                raise ValueError("Role should be a string.")
+
+            if not isinstance(message["content"], str):
+                raise ValueError("Content should be a string.")
+
+    if len(messages) > 0 and isinstance(messages[0], list):
+        for t in messages:
+            validate(t)
+    else:
+        validate(messages)
+    return messages
 
 
 @dataclass
@@ -132,7 +164,45 @@ class CreateRequest(BaseModel):
         extra: str = "forbid"
 
 
+class ChatRequest(BaseModel):
+    messages: list[dict[str, str]]
+    params: Optional[CreateParameters] = None
+    use_session: bool = True
+    _validate_messages = validator("messages", allow_reuse=True)(check_messages)
+
+    @validator("params", always=True, pre=True)
+    def check_params(cls, params, values) -> CreateParameters:
+        if params is None:
+            return CreateParameters()
+        return params
+
+
+    class Config:
+        extra: str = "forbid"
+
+
 class StreamCreateRequest(CreateRequest):
+    stream_granularity: int = 1
+
+    @validator("params", always=True, pre=True)
+    def check_params(cls, params, values) -> CreateParameters:
+        if params is None:
+            return CreateParameters()
+        n_completions = params.get("n_completions", 1)
+        if n_completions > 1:
+            raise ValueError(f"Stream Create does not support n_completions > 1. Found {n_completions}")
+        return params
+
+    @validator("stream_granularity")
+    def check_stream_granularity(cls, stream_granularity):
+        if stream_granularity < 1 or stream_granularity > 32:
+            raise ValueError(
+                f"stream_granularity parameter should satisfy 1 <= stream_granularity <= 32. Found {stream_granularity}"
+            )
+        return stream_granularity
+
+
+class StreamChatRequest(ChatRequest):
     stream_granularity: int = 1
 
     @validator("params", always=True, pre=True)
