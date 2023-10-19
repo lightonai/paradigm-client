@@ -1,4 +1,5 @@
 import os
+import warnings
 from dataclasses import dataclass
 from enum import Enum
 from re import Pattern
@@ -35,6 +36,7 @@ class CreateParameters(BaseModel):
     seed: Optional[int] = None  # set the seed for the sampling phase
     show_special_tokens: bool = False
     biases: dict[int, float] = Field(default_factory=dict)
+    stop_regex: Optional[Pattern] = None
     stop_sequences: Optional[list[str]] = None
     prettify: bool = True
     return_log_probs: bool = False
@@ -85,6 +87,13 @@ class CreateParameters(BaseModel):
             if not -100.0 <= bias_value <= 100.0:
                 raise ValueError(f"bias_value from should satisfy -100.0 <= bias <= 100.0. Found {bias_value}")
         return biases
+
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        if d["stop_regex"] is not None:
+            warnings.warn("`stop_regex` has been deprecated in favor of `stop_sequences`. It is ignored.")
+        d.pop("stop_regex")
+        return d
 
 
 def is_empty_text(txt: str) -> bool:

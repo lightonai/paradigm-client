@@ -189,7 +189,7 @@ class SagemakerCommunicator(AbstractCommunicator):
             parts = line.split("data: ")[1].strip()
             return json.loads(parts)["text"]
         else:
-            return ""
+            raise ValueError(f"Invalid line: {line}")
 
     def stream_response(self, data: Any, endpoint: Endpoint):
         body = {"data": data, "endpoint": f"/llm/{endpoint.value}"}
@@ -201,6 +201,8 @@ class SagemakerCommunicator(AbstractCommunicator):
             ContentType="application/json",
             Accept="application/json",
         )
+        # Sometimes, SageMaker doesn't send the complete payload `data: {"request_id": "123", "text": " Hello"}`, but 
+        # only a part of it (i.e. `data: {"request)`. We use try/except to handle this case.
         last_line = ""
         for r in response["Body"]:
             line = r["PayloadPart"]["Bytes"].decode("utf-8")
@@ -209,7 +211,7 @@ class SagemakerCommunicator(AbstractCommunicator):
                 decoded = self.decode_line(payload)
                 yield payload
                 last_line = ""
-            except:
+            except (json.decoder.JSONDecodeError, ValueError):
                 decoded = ""
                 last_line = copy.deepcopy(line)
 
