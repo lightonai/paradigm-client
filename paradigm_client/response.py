@@ -1,5 +1,5 @@
-from enum import Enum
 import pickle
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
@@ -8,8 +8,7 @@ from pydantic import BaseModel
 class FinishReason(str, Enum):
     length = "length"
     generated_stop = "generated_stop"
-    stop_regex = "stop_regex"
-    stop_word = "stop_word"  # TODO: remove when server up-to-date
+    stop_sequences = "stop_sequences"
 
 
 class LogProbs(BaseModel):
@@ -27,8 +26,16 @@ class CreateCandidatesOutput(BaseModel):
 
 class CreateResponse(BaseModel):
     response_id: Optional[str] = None
-    input_text: str
     completions: list[CreateCandidatesOutput]
+
+
+class CreateResponseCompletion(CreateResponse):
+    input_text: str
+
+
+class CreateResponseChat(CreateResponse):
+    input_messages: list[dict[str, str]]
+    prompt: str
 
 
 class AnalyseResponse(BaseModel):
@@ -47,9 +54,11 @@ class SelectResponse(BaseModel):
     rankings: Optional[list[Rankings]]
     best: str
 
+
 class ScoreResponse(BaseModel):
     text: str
     score: float
+
 
 class TokenizeResponse(BaseModel):
     text: str

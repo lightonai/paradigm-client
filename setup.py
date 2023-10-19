@@ -1,7 +1,6 @@
 import pathlib
 
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 
 here = pathlib.Path(__file__).parent.resolve()
 
@@ -35,7 +34,7 @@ setup(
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
     install_requires=["aiohttp>=3.8.4", "pydantic>=1.10.2", "requests>=2.31.0", "tqdm>=4.64.1"],
-    extras_require={"langchain": ["langchain>=0.0.306"]},
+    extras_require={"langchain": ["langchain>=0.0.306"], "sagemaker": ["boto3>=1.28.66", "botocore>=1.31.66"]},
     packages=find_packages(exclude=["examples", "tests"]),
     keywords=["NLP", "API", "AI", "LLM"],
     classifiers=classifiers,

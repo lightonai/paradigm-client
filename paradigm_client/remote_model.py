@@ -1,23 +1,20 @@
 import os
 import re
 import time
-from typing import Any, Generator, Optional, Union, Dict, Literal
-import requests
+from typing import Any, Dict, Generator, Literal, Optional, Union
 
 import aiohttp
+import requests
 from pydantic import BaseModel, validate_arguments
 
-from .request import (
-    CreateRequest,
-    CreateParameters,
-    AnalyseRequest,
-    ScoreRequest,
-    SelectRequest,
-    TokenizeRequest,
-    Endpoint,
-)
-from .response import CreateResponse, AnalyseResponse, SelectResponse, TokenizeResponse, ErrorResponse, FeedbackResponse, ScoreResponse
 from .communicator import Communicator, SagemakerCommunicator
+from .request import (AnalyseRequest, ChatRequest, CreateParameters,
+                      CreateRequest, Endpoint, ScoreRequest, SelectRequest,
+                      TokenizeRequest)
+from .response import (AnalyseResponse, CreateResponse, CreateResponseChat,
+                       CreateResponseCompletion, ErrorResponse,
+                       FeedbackResponse, ScoreResponse, SelectResponse,
+                       TokenizeResponse)
 
 DEFAULT_BASE_ADDRESS = "https://paradigm.lighton.ai"
 
@@ -72,7 +69,9 @@ class RemoteModel:
                 elif endpoint == Endpoint.analyse:
                     return AnalyseResponse(**response)
                 elif endpoint == Endpoint.create:
-                    return CreateResponse(**response)
+                    return CreateResponseCompletion(**response)
+                elif endpoint == Endpoint.chat:
+                    return CreateResponseChat(**response)
                 elif endpoint == Endpoint.tokenize:
                     return TokenizeResponse(**response)
                 elif endpoint == Endpoint.score:
@@ -92,14 +91,16 @@ class RemoteModel:
                         request_id="", error_msg="An unexpected error occurred. Contact Paradigm Support at support@lighton.ai", status_code=500
                     )
 
-    def _post_stream(self, data: Any) -> Generator[str, None, None]:
-        return self.comm(data, Endpoint.stream_create, stream=True)
+    def _post_stream(self, data: Any, endpoint: Endpoint) -> Generator[str, None, None]:
+        return self.comm(data, endpoint=endpoint, stream=True)
 
     def _post_objects(
         self, objects: Union[BaseModel, list[BaseModel]], endpoint: Endpoint, show_progress: bool = False
     ) -> Union[list[SelectResponse], list[AnalyseResponse], list[CreateResponse], list[TokenizeResponse], ErrorResponse]:
         def compute_num_tasks(obj) -> int:
             if endpoint == Endpoint.create:
+                return obj.params.n_completions
+            elif endpoint == Endpoint.chat:
                 return obj.params.n_completions
             elif endpoint == Endpoint.select:
                 return len(obj.candidates)
@@ -135,7 +136,7 @@ class RemoteModel:
     @validate_arguments
     def create(
         self, prompt: str, params: Optional[CreateParameters] = None, use_session: bool = True, show_progress: bool = False, **kwargs: Any
-    ) -> Union[CreateResponse, ErrorResponse]:
+    ) -> Union[CreateResponseCompletion, ErrorResponse]:
         params = self._get_params(params, **kwargs)
         response = self._post(
             {"text": prompt, "params": params, "use_session": use_session},
@@ -146,11 +147,31 @@ class RemoteModel:
         return self._format_single_request_output(response)
 
     @validate_arguments
+    def chat(
+        self, messages: list[dict[str, str]], params: Optional[CreateParameters] = None, use_session: bool = True, show_progress: bool = False, **kwargs: Any
+    ) -> Union[CreateResponseChat, ErrorResponse]:
+        params = self._get_params(params, **kwargs)
+        response = self._post(
+            {"messages": messages, "params": params, "use_session": use_session},
+            Endpoint.chat,
+            num_tasks=params.get("n_completions", 1),
+            show_progress=show_progress,
+        )
+        return self._format_single_request_output(response)
+
+    @validate_arguments
     def stream_create(
         self, prompt: str, params: Optional[CreateParameters] = None, **kwargs: Any
     ) -> Generator[str, None, None]:
         params = self._get_params(params, **kwargs)
-        return self._post_stream({"text": prompt, "params": params})
+        return self._post_stream({"text": prompt, "params": params}, endpoint=Endpoint.stream_create)
+
+    @validate_arguments
+    def stream_chat(
+        self, messages: list[dict[str, str]], params: Optional[CreateParameters] = None, **kwargs: Any
+    ) -> Generator[str, None, None]:
+        params = self._get_params(params, **kwargs)
+        return self._post_stream({"messages": messages, "params": params}, endpoint=Endpoint.stream_chat)
 
     @validate_arguments
     def analyse(self, text: str, show_progress: bool = False) -> Union[AnalyseResponse , ErrorResponse]:
@@ -196,8 +217,14 @@ class RemoteModel:
     @validate_arguments
     def create_from_objects(
         self, create_obj: Union[CreateRequest, list[CreateRequest]], show_progress: bool = False
-    ) -> Union[list[CreateResponse], ErrorResponse]:
+    ) -> Union[list[CreateResponseCompletion], ErrorResponse]:
         return self._post_objects(create_obj, Endpoint.create, show_progress=show_progress)
+
+    @validate_arguments
+    def chat_from_objects(
+        self, create_obj: Union[ChatRequest, list[ChatRequest]], show_progress: bool = False
+    ) -> Union[list[CreateResponseChat], ErrorResponse]:
+        return self._post_objects(create_obj, Endpoint.chat, show_progress=show_progress)
 
     @validate_arguments
     def analyse_from_objects(
