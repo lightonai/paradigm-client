@@ -179,49 +179,7 @@ class ChatRequest(BaseModel):
 
     class Config:
         extra: str = "forbid"
-
-
-class StreamCreateRequest(CreateRequest):
-    stream_granularity: int = 1
-
-    @validator("params", always=True, pre=True)
-    def check_params(cls, params, values) -> CreateParameters:
-        if params is None:
-            return CreateParameters()
-        n_completions = params.get("n_completions", 1)
-        if n_completions > 1:
-            raise ValueError(f"Stream Create does not support n_completions > 1. Found {n_completions}")
-        return params
-
-    @validator("stream_granularity")
-    def check_stream_granularity(cls, stream_granularity):
-        if stream_granularity < 1 or stream_granularity > 32:
-            raise ValueError(
-                f"stream_granularity parameter should satisfy 1 <= stream_granularity <= 32. Found {stream_granularity}"
-            )
-        return stream_granularity
-
-
-class StreamChatRequest(ChatRequest):
-    stream_granularity: int = 1
-
-    @validator("params", always=True, pre=True)
-    def check_params(cls, params, values) -> CreateParameters:
-        if params is None:
-            return CreateParameters()
-        n_completions = params.get("n_completions", 1)
-        if n_completions > 1:
-            raise ValueError(f"Stream Create does not support n_completions > 1. Found {n_completions}")
-        return params
-
-    @validator("stream_granularity")
-    def check_stream_granularity(cls, stream_granularity):
-        if stream_granularity < 1 or stream_granularity > 32:
-            raise ValueError(
-                f"stream_granularity parameter should satisfy 1 <= stream_granularity <= 32. Found {stream_granularity}"
-            )
-        return stream_granularity
-
+        
 
 class AnalyseRequest(BaseModel):
     text: str
