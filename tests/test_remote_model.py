@@ -6,8 +6,8 @@ import pytest
 from paradigm_client.communicator import SagemakerCommunicator
 from paradigm_client.remote_model import DEFAULT_BASE_ADDRESS, RemoteModel
 from paradigm_client.request import CreateRequest
-from paradigm_client.response import (CreateResponse, CreateResponseCompletion,
-                                      SelectResponse, TokenizeResponse)
+from paradigm_client.response import (CreateResponse, SelectResponse,
+                                      TokenizeResponse)
 
 DEV_HOST = os.environ.get("DEV_HOST", None)
 
@@ -77,7 +77,7 @@ def test_tokenize(remote_model: RemoteModel):
 def test_create_from_objects(remote_model: RemoteModel):
     requests = CreateRequest(text="Hello I am")
     response = remote_model.create_from_objects(requests)
-    assert isinstance(response[0], CreateResponseCompletion)
+    assert isinstance(response[0], CreateResponse)
 
 
 def test_can_log_a_boolean_feedback(
