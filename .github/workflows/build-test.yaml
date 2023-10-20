@@ -1,0 +1,39 @@
+name: Build package and run tests
+
+on: pull_request
+
+env:
+  # needed environmental variables for running tests
+  HOST: ${{ secrets.HOST }}
+  PARADIGM_API_KEY: ${{ secrets.PARADIGM_API_KEY }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build package
+        run: |
+          pip install setuptools wheel
+          python setup.py sdist bdist_wheel
+
+      - name: Test package
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install dist/*.whl
+          python3 -m pytest

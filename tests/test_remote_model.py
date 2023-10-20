@@ -1,31 +1,34 @@
-from paradigm_client.response import CreateResponse, SelectResponse, TokenizeResponse
-from paradigm_client.remote_model import RemoteModel, DEFAULT_BASE_ADDRESS
-from paradigm_client.communicator import SagemakerCommunicator
-from paradigm_client.request import CreateRequest
-from unittest import mock
-import pytest
 import os
+from unittest import mock
+
+import pytest
+
+from paradigm_client.communicator import SagemakerCommunicator
+from paradigm_client.remote_model import DEFAULT_BASE_ADDRESS, RemoteModel
+from paradigm_client.request import CreateRequest
+from paradigm_client.response import (CreateResponse, SelectResponse,
+                                      TokenizeResponse)
 
 DEV_HOST = os.environ.get("DEV_HOST", None)
 
 
 @pytest.fixture
 def remote_model():
-    return RemoteModel(DEV_HOST, model_name="llm-mini")
+    return RemoteModel(DEV_HOST, model_name="alfred-40b-0723")
 
 
 def test_should_use_default_address_when_no_url_given():
-    model = RemoteModel(model_name="llm-mini")
+    model = RemoteModel(model_name="alfred-40b-0723")
     assert model.base_address == DEFAULT_BASE_ADDRESS
 
 
 def test_should_use_default_address_when_given_explicit_none():
-    model = RemoteModel(None, model_name="llm-mini")
+    model = RemoteModel(None, model_name="alfred-40b-0723")
     assert model.base_address == DEFAULT_BASE_ADDRESS
 
 
 def test_should_remove_the_slashes_at_the_end_of_base_address():
-    model = RemoteModel(DEFAULT_BASE_ADDRESS + "/////", model_name="llm-mini")
+    model = RemoteModel(DEFAULT_BASE_ADDRESS + "/////", model_name="alfred-40b-0723")
     assert model.base_address == DEFAULT_BASE_ADDRESS
 
 
@@ -35,7 +38,7 @@ def test_should_raise_error_when_no_api_key_available():
     modified_environ = {k: v for k, v in os.environ.items() if k not in names_to_remove}
     with mock.patch.dict(os.environ, modified_environ, clear=True):
         with pytest.raises(AssertionError, match="You must provide an API key through the PARADIGM_API_KEY environment variable or the api_key parameter"):
-            model = RemoteModel(model_name="llm-mini")
+            model = RemoteModel(model_name="alfred-40b-0723")
 
 
 @pytest.mark.skipif(
