@@ -90,6 +90,9 @@ class CreateParameters(BaseModel):
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
+        # remove stop_sequences if not used to have compatibility with previous versions of the API
+        if d["stop_sequences"] is None:
+            d.pop("stop_sequences")
         if d["stop_regex"] is not None:
             warnings.warn("`stop_regex` has been deprecated in favor of `stop_sequences`. It is ignored.")
         d.pop("stop_regex")
