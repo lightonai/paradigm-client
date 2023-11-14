@@ -56,7 +56,7 @@ class Communicator(AbstractCommunicator):
         self.base_address = base_address
         self.headers = headers
         self.timeout_s = aiohttp.ClientTimeout(total=timeout_s)
-        self.model_name: str | None = None
+        self.model_name: Optional[str] = None
         self.raise_for_status = raise_for_status
 
     async def _post(self, data: Any, endpoint: Endpoint, session_id: Optional[str] = None):
@@ -147,7 +147,7 @@ class SagemakerCommunicator(AbstractCommunicator):
         self._runtime_sm_client = boto3.client("sagemaker-runtime", region_name=region_name)
         self._sm_client = boto3.client("sagemaker", region_name=region_name)
 
-        self.model_name: str | None = None
+        self.model_name: Optional[str] = None
 
     def _invoke_endpoint(self, endpoint: str, session_id: Optional[str] = None, data: Optional[dict] = None):
         request_id = {"request_id": session_id} if session_id else {}

@@ -117,8 +117,8 @@ def check_text(text: Union[str, list[str]]) -> Union[str, list[str]]:
 
 
 def check_messages(
-    messages: list[dict[str, str]] | list[list[dict[str, str]]]
-) -> list[dict[str, str]] | list[list[dict[str, str]]]:
+    messages: Union[list[dict[str, str]],list[list[dict[str, str]]]]
+) -> Union[list[dict[str, str]],list[list[dict[str, str]]]]:
     def validate(t: list[dict[str, str]]):
         if len(t) == 0:
             raise ValueError("Received empty messages. Abort")
